@@ -1,13 +1,29 @@
 import gradio as gr
 import pandas as pd
+import plotly.express as px
+import plotly.io as pio
 
+# ตั้งค่าธีมเริ่มต้น
+pio.templates.default = "plotly_dark"
 
 # สร้างข้อมูลใหม่
 sales_data = pd.DataFrame({
     "Product": ["Product A", "Product B", "Product C", "Product D", "Product E"],
-    "Sales": [150, 200, 300, 100, 250],
+    "Sales": [15554000, 26580000, 39658000, 44504000, 50588000],
     "Region": ["North", "South", "East", "West", "North"]
 })
+
+# ฟังก์ชันสร้าง Pie Chart
+def pie_chart():
+    pie_data = sales_data.groupby("Region").sum().reset_index()
+    fig = px.pie(
+        pie_data,
+        values="Sales",
+        names="Region",
+        title="Sales Distribution by Region",
+        template="plotly_dark"  # ใช้ธีมสีเดียวกับ Bar Chart และ Line Chart
+    )
+    return fig
 
 # ฟังก์ชันสร้าง Bar Plot
 def bar_plot(sort_option):
@@ -29,6 +45,7 @@ def bar_plot(sort_option):
         color_legend_title="Region"
     )
 
+# ฟังก์ชันสร้าง Line Plot
 def line_plot(sort_option):
     if sort_option == "Ascending":
         sorted_data = sales_data.sort_values(by="Sales")
@@ -77,21 +94,15 @@ def get_gradio_link():
             color_legend_title="Region"
         )
 
-        # อัปเดต Bar Chart
-        def update_charts(sort_option):
-            if sort_option == "Ascending":
-                sorted_data = sales_data.sort_values(by="Sales")
-            elif sort_option == "Descending":
-                sorted_data = sales_data.sort_values(by="Sales", ascending=False)
-            else:
-                sorted_data = sales_data
+        # Pie Chart
+        pie_chart_plot = gr.Plot(pie_chart())
 
-            return (
-                gr.BarPlot(value=sorted_data, x="Product", y="Sales", color="Region"),
-                gr.LinePlot(value=sorted_data, x="Product", y="Sales", color="Region")
-            )
+        # จัดเรียงองค์ประกอบในหน้า Gradio
+        with gr.Row():
+            bar_chart
+            line_chart
+            pie_chart_plot
 
     # รัน Gradio App
     _, local_url, _ = demo.launch(share=False, inline=False, prevent_thread_lock=True)
     return local_url
-
