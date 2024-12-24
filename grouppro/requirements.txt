@@ -2,4 +2,5 @@ django
 scikit-learn
 pandas
 pillow
+plotly
 gradio
