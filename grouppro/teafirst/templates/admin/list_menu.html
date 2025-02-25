@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>จัดการเมนู</title>
+    <script>
+        function showForm() {
+            document.getElementById("menu-form").style.display = "block";
+        }
+        function hideForm() {
+            document.getElementById("menu-form").style.display = "none";
+        }
+
+        function showEditForm(menuId, name, description, price) {
+            document.getElementById("edit-menu-form").style.display = "block";
+            document.getElementById("edit-menu-id").value = menuId;
+            document.getElementById("edit-menu-name").value = name;
+            document.getElementById("edit-menu-description").value = description;
+            document.getElementById("edit-menu-price").value = price;
+        }
+
+        function hideEditForm() {
+            document.getElementById("edit-menu-form").style.display = "none";
+        }
+
+        function confirmDelete(menuId) {
+            let confirmAction = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบเมนูนี้?");
+            if (confirmAction) {
+                document.getElementById("delete-form-" + menuId).submit();
+            }
+        }
+    </script>
+</head>
+<body>
+    <h2>จัดการเมนูเครื่องดื่ม</h2>
+
+    <button onclick="showForm()">+ เพิ่มเมนู</button>
+
+    <!-- เพิ่มเมนู (ป๊อปอัป) -->
+    <div id="menu-form" style="display: none;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">บันทึก</button>
+            <button type="button" onclick="hideForm()">ยกเลิก</button>
+        </form>
+    </div>
+
+    <!--แก้ไขเมนู (ป๊อปอัป) -->
+    <div id="edit-menu-form" style="display: none;">
+        <form method="post" action="{% url 'edit_menu' %}">
+            {% csrf_token %}
+            <input type="hidden" id="edit-menu-id" name="menu_id">
+            <label>ชื่อเมนู:</label>
+            <input type="text" id="edit-menu-name" name="name" required>
+            <label>รายละเอียด:</label>
+            <input type="text" id="edit-menu-description" name="description">
+            <label>ราคา:</label>
+            <input type="number" id="edit-menu-price" name="price" step="0.01" required>
+            <button type="submit">บันทึกการแก้ไข</button>
+            <button type="button" onclick="hideEditForm()">ยกเลิก</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <h3>รายการเมนู</h3>
+    <ul>
+        {% for menu in menus %}
+            <li>
+                {% if menu.image %}
+                    <img src="{{ menu.image.url }}" alt="{{ menu.name }}" width="80">
+                {% endif %}
+                <strong>{{ menu.name }}</strong> - {{ menu.price }} บาท
+                <p>{{ menu.description }}</p>
+
+                <button onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}')">แก้ไข</button>
+
+                <form id="delete-form-{{ menu.id }}" action="{% url 'delete_menu' menu.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" onclick="confirmDelete('{{ menu.id }}')">ลบ</button>
+                </form>
+            </li>
+        {% empty %}
+            <p>ยังไม่มีเมนูในระบบ</p>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'menu' %}">กลับไปที่เมนู</a>
+</body>
+</html>

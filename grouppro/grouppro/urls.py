@@ -15,10 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('gradio/', include('gradioF.urls')),
     path('sklearn/', include('sklearnapp.urls')),
-]
+    path('', include('teafirst.urls'))
+] 
+# เพิ่มโค้ดนี้ที่ท้ายไฟล์ เพื่อให้รองรับ MEDIA FILES
+if settings.DEBUG:  # ใช้เฉพาะตอนพัฒนา
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

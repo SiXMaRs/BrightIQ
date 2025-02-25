@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ประวัติการสั่งซื้อ</title>
+</head>
+<body>
+    <h2>ประวัติการสั่งซื้อทั้งหมด</h2>
+
+    <a href="{% url 'create_order_from_store' %}">
+        <button>เพิ่มออเดอร์จากหน้าร้าน</button>
+    </a>
+
+    <ul>
+        {% for order in orders %}
+            <li>
+                <strong>ชื่อผู้สั่ง:</strong> {{ order.user.get_full_name|default:order.user.username }}<br>
+                {% if order.image %}
+                    <img src="{{ order.image.url }}" alt="{{ order.menu.name }}" width="100">
+                {% endif %}
+                <strong>เมนู:</strong> {{ order.menu.name }}<br>
+                <strong>จำนวน:</strong> {{ order.quantity }}<br>
+                <strong>ราคารวม:</strong> {{ order.total_price }} บาท<br>
+                <strong>วันที่สั่งซื้อ:</strong> {{ order.ordered_at }}<br>
+                <strong>สถานะ:</strong> {{ order.get_status_display }}<br>
+
+                {% if order.status == 'waiting' %}
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <button type="submit">สำเร็จ</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}
+            <p>ยังไม่มีคำสั่งซื้อ</p>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'menu' %}">กลับไปที่เมนู</a>
+</body>
+</html>

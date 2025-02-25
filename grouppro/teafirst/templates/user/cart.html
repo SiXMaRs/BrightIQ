@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ตะกร้าสินค้า</title>
+</head>
+<body>
+    <h2>ตะกร้าสินค้าของคุณ</h2>
+
+    <a href="{% url 'menu' %}">
+        <button>🔙 กลับไปที่เมนู</button>
+    </a>
+
+    <ul>
+        {% for item in cart_items %}
+            <li>
+                {% if item.menu.image %}
+                    <img src="{{ item.menu.image.url }}" alt="{{ item.menu.name }}" width="100">
+                {% endif %}
+                <strong>{{ item.menu.name }}</strong> - {{ item.menu.price }} บาท x{{ item.quantity }}
+
+                <form action="{% url 'update_cart' item.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="increase">
+                    <button type="submit">➕</button>
+                </form>
+
+                <form action="{% url 'update_cart' item.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="decrease">
+                    <button type="submit">➖</button>
+                </form>
+            </li>
+        {% empty %}
+            <p>ยังไม่มีสินค้าในตะกร้า</p>
+        {% endfor %}
+    </ul>
+
+    <h3>ราคารวม: {{ total_price }} บาท</h3>
+
+    {% if cart_items %}
+        <form action="{% url 'order' %}" method="post">
+            {% csrf_token %}
+            <button type="submit">🛒 สั่งซื้อ</button>
+        </form>
+    {% endif %}
+</body>
+</html>

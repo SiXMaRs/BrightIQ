@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>เพิ่มออเดอร์จากหน้าร้าน</title>
+</head>
+<body>
+    <h2>เพิ่มออเดอร์จากหน้าร้าน</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="menu">เลือกเมนู:</label>
+        <select name="menu_id">
+            {% for menu in menus %}
+                <option value="{{ menu.id }}">{{ menu.name }} - {{ menu.price }} บาท</option>
+            {% endfor %}
+        </select><br><br>
+
+        <label for="quantity">จำนวน:</label>
+        <input type="number" name="quantity" min="1" required><br><br>
+
+        <button type="submit">เพิ่มออเดอร์</button>
+    </form>
+
+    <a href="{% url 'order_history' %}">กลับไปที่ประวัติการสั่งซื้อ</a>
+</body>
+</html>
