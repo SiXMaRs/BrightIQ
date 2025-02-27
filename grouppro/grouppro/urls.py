@@ -21,9 +21,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('gradio/', include('gradioF.urls')),
     path('sklearn/', include('sklearnapp.urls')),
-    path('', include('teafirst.urls'))
+    path('', include('teafirst.urls')),
+    path("__reload__/", include("django_browser_reload.urls")),
 ] 
 # เพิ่มโค้ดนี้ที่ท้ายไฟล์ เพื่อให้รองรับ MEDIA FILES
 if settings.DEBUG:  # ใช้เฉพาะตอนพัฒนา

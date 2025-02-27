@@ -4,6 +4,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import *
 from .models import *
+import gradio as gr
+import pandas as pd
+import plotly.express as px
+import plotly.io as pio
+from django.db.models import Sum,Count
+from django.db.models.functions import TruncMonth, TruncDay
+from django.shortcuts import render
+import threading
+import calendar
+
 
 def register_view(request):
     if request.method == 'POST':
@@ -185,3 +195,152 @@ def create_order_from_store(request):
 
     menus = Menu.objects.all()  
     return render(request, 'admin/order_from_store.html', {'menus': menus})
+
+
+# Gradio
+# ตั้งค่าธีมของ Plotly
+pio.templates.default = "plotly_dark"
+
+# ✅ ฟังก์ชันดึงข้อมูลยอดขายตามเดือนและวัน
+def get_sales_data(selected_month=None):
+    print(f"🔄 กำลังดึงข้อมูลสำหรับเดือน: {selected_month}")
+
+    data = (
+        Order.objects.annotate(
+            month=TruncMonth("ordered_at"),
+            day=TruncDay("ordered_at")
+        )
+        .values("month", "day")
+        .annotate(
+            total_sales=Sum("total_price"),
+            order_count=Count("id")
+        )
+        .order_by("day")
+    )
+
+    df = pd.DataFrame(list(data))
+
+    if df.empty:
+        print("⚠️ ไม่มีข้อมูลยอดขายในช่วงเวลานี้!")
+        return pd.DataFrame({"Day": [], "Total Sales": [], "Order Count": []})
+
+    df["Day"] = pd.to_datetime(df["day"]).dt.strftime("%Y-%m-%d")
+    df.rename(columns={"total_sales": "Total Sales", "order_count": "Order Count"}, inplace=True)
+
+    # ✅ กรองเฉพาะเดือนที่เลือก
+    if selected_month and selected_month != "All":
+        df = df[df["Day"].str.startswith(selected_month)]
+
+        # ✅ สร้างช่วงวันที่ให้ครบทุกวันของเดือน
+        year, month = map(int, selected_month.split("-"))
+        num_days = calendar.monthrange(year, month)[1]  # ดึงจำนวนวันในเดือนนั้น
+        all_days = pd.date_range(start=f"{selected_month}-01", periods=num_days, freq="D").strftime("%Y-%m-%d")
+        df_full = pd.DataFrame({"Day": all_days})
+
+        # ✅ รวมข้อมูลเข้ากับ `df` (ถ้าไม่มีค่า ให้ใส่ 0)
+        df = df_full.merge(df, on="Day", how="left").fillna({"Total Sales": 0, "Order Count": 0})
+
+    print("📊 DataFrame ที่ใช้สร้างกราฟ (หลังเติมข้อมูลครบเดือน):\n", df.head(10))  # ✅ แสดง 10 แถวแรก
+    print(df.info())  # ✅ ตรวจสอบโครงสร้าง
+    return df
+
+# ✅ ฟังก์ชันสร้างกราฟ
+def generate_charts(selected_month="All"):
+    df = get_sales_data(selected_month)
+
+    if df.empty:
+        print("❌ ไม่มีข้อมูลสำหรับเดือนที่เลือก")
+        return (
+            px.bar(title="No Sales Data"), 
+            px.line(title="No Sales Data"), 
+            px.pie(title="No Sales Data"), 
+            px.bar(title="No Orders Data"),
+            "💰 Total Sales: 0 ฿ | 📦 Total Orders: 0", 
+            {}, {}
+        )
+
+    df["Total Sales"] = df["Total Sales"].astype(float)  # ✅ บังคับเป็น float
+    df["Order Count"] = df["Order Count"].astype(int)  # ✅ บังคับเป็น int
+
+    total_sales_month = df["Total Sales"].sum()
+    total_orders_month = df["Order Count"].sum()
+
+    total_sales_per_day = dict(zip(df["Day"], df["Total Sales"]))
+    total_orders_per_day = dict(zip(df["Day"], df["Order Count"]))
+
+    df["Day"] = df["Day"].astype(str)  # ✅ บังคับให้เป็น string แก้ปัญหาแสดงเวลา 12:00
+
+    # ✅ บังคับให้ Plotly เรียงลำดับวันถูกต้อง
+    category_orders = {"Day": sorted(df["Day"].unique())}
+
+    # ✅ Bar Chart (ยอดขายรายวัน)
+    bar_chart = px.bar(
+        df, x="Day", y="Total Sales", title=f"Daily Sales in {selected_month}",
+        text=df["Total Sales"].astype(str), category_orders=category_orders
+    )
+    bar_chart.update_xaxes(type="category", categoryorder="array", categoryarray=sorted(df["Day"].unique()))
+    bar_chart.update_traces(texttemplate='%{text} ฿', textposition='outside')
+
+    # ✅ Line Chart (แนวโน้มยอดขาย)
+    line_chart = px.line(
+        df, x="Day", y="Total Sales", title=f"Sales Trend in {selected_month}",
+        text=df["Total Sales"].astype(str), category_orders=category_orders
+    )
+    line_chart.update_xaxes(type="category", categoryorder="array", categoryarray=sorted(df["Day"].unique()))
+    line_chart.update_traces(mode="lines+markers+text", textposition="top center", texttemplate='%{text} ฿')
+
+
+    # ✅ Bar Chart (จำนวนคำสั่งซื้อรายวัน)
+    order_chart = px.bar(
+        df, x="Day", y="Order Count", title=f"Daily Order Count in {selected_month}",
+        text=df["Order Count"].astype(str), category_orders={"Day": sorted(df["Day"].unique())}
+    )
+    order_chart.update_traces(texttemplate='%{text} Orders', textposition='outside')
+
+    print("✅ Charts Generated!")
+
+    return (
+        bar_chart, line_chart, order_chart,
+        f"💰 Total Sales: {total_sales_month:.2f} ฿ | 📦 Total Orders: {total_orders_month}",
+        total_sales_per_day, total_orders_per_day
+    )
+
+# ✅ ฟังก์ชันสร้าง Gradio Dashboard
+def gradio_dashboard():
+    print("✅ กำลังรัน Gradio...")
+
+    df = get_sales_data()
+    available_months = ["All"] + sorted(df["Day"].str[:7].unique().tolist()) if not df.empty else ["All"]
+
+    with gr.Blocks() as demo:
+        gr.Markdown("### 📊 Sales & Orders Dashboard - Data from Database")
+
+        selected_month = gr.Dropdown(choices=available_months, value="All", label="🔍 Select Month")
+
+        bar_chart, line_chart, order_chart, total_sales, total_sales_per_day, total_orders_per_day = generate_charts("All")
+
+        bar_plot = gr.Plot(bar_chart)
+        line_plot = gr.Plot(line_chart)
+        order_plot = gr.Plot(order_chart)
+        total_sales_text = gr.Textbox(value=total_sales, interactive=False, label="💰 Total Sales & Orders")
+
+        # ✅ อัปเดตเมื่อเลือกเดือน
+        selected_month.change(
+            generate_charts,
+            inputs=[selected_month],
+            outputs=[bar_plot, line_plot, order_plot, total_sales_text]
+        )
+
+    print("✅ Gradio Loaded!")
+    demo.launch(server_name="127.0.0.1", server_port=7860, share=False, inline=False)
+
+
+# ✅ รัน Gradio
+gradio_url = "http://127.0.0.1:7860/"
+if not any(thread.name == "GradioThread" for thread in threading.enumerate()):
+    print("🚀 เริ่มรัน Gradio บนพอร์ต 7860")
+    thread = threading.Thread(target=gradio_dashboard, daemon=True, name="GradioThread")
+    thread.start()
+
+def dashboard(request):
+    return render(request, "dashboard/gradio_dashboard.html", {"gradio_url": gradio_url})

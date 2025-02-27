@@ -3,4 +3,5 @@ scikit-learn
 pandas
 pillow
 plotly
-gradio
+gradio==3.50.2
+django-tailwind

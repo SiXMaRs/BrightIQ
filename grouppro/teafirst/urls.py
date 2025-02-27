@@ -17,4 +17,6 @@ urlpatterns = [
     path('delete-menu/<int:menu_id>/', delete_menu_view, name='delete_menu'),
     path('order-history/', order_history_view, name='order_history'),
     path('create-order-from-store/', create_order_from_store, name='create_order_from_store'),
+
+    path("dashboard/", dashboard, name="dashboard"),
 ]
