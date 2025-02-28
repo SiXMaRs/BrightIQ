@@ -1,90 +1,299 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>จัดการเมนู</title>
-    <script>
-        function showForm() {
-            document.getElementById("menu-form").style.display = "block";
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการเมนูเครื่องดื่ม</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <style>
+        /* Floating Action Button (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #CD853F;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
         }
-        function hideForm() {
-            document.getElementById("menu-form").style.display = "none";
+        .fab:hover {
+            transform: scale(1.15);
+            background-color: #A67C52;
         }
 
-        function showEditForm(menuId, name, description, price) {
-            document.getElementById("edit-menu-form").style.display = "block";
+        /* ปุ่มไอคอน (edit/delete) */
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+        .icon-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* Modal ทั่วไป */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.hidden {
+            display: none;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 350px; /* ปรับให้เล็กลงได้ตามต้องการ */
+        }
+    </style>
+
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6">
+
+    <div class="max-w-4xl w-full bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-center mb-6">จัดการเมนูเครื่องดื่ม</h2>
+
+        <!-- FAB ปุ่มเพิ่มเมนู -->
+        <button onclick="showForm()" class="fab">
+            <i class="material-icons">add</i>
+        </button>
+
+        <h3 class="text-xl font-semibold my-4">รายการเมนู</h3>
+
+        {% if menus %}
+        <ul class="space-y-4">
+            {% for menu in menus %}
+            <li class="bg-gray-50 p-4 rounded-lg shadow-md flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    {% if menu.image %}
+                        <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-16 h-16 rounded-lg object-cover">
+                    {% endif %}
+                    <div>
+                        <h3 class="text-lg font-semibold">{{ menu.name }}</h3>
+                        <p class="text-gray-600">{{ menu.description }}</p>
+                        <p class="text-[#CC6600] font-bold">{{ menu.price }} บาท</p>
+                    </div>
+                </div>
+
+                <!-- ปุ่มแก้ไข & ลบ ย้ายมาอยู่ฝั่งขวาสุด ติดกัน -->
+                <div class="flex items-center space-x-4 justify-end">
+                    <button class="icon-btn text-blue-500" 
+                            onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}', '{% if menu.image %}{{ menu.image.url }}{% endif %}')">
+                        <i class="material-icons">edit</i>
+                    </button>
+
+                    <button class="icon-btn text-red-500" 
+                            onclick="showDeleteModal('{{ menu.id }}', '{{ menu.name }}')">
+                        <i class="material-icons">delete</i>
+                    </button>
+
+                    <form id="delete-form-{{ menu.id }}" action="{% url 'delete_menu' menu.id %}" method="post" class="hidden">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-gray-500 mt-10">ยังไม่มีเมนูในระบบ</p>
+        {% endif %}
+    </div>
+
+    <!-- ========== Modal เพิ่มเมนู ========== -->
+    <div id="menu-form" class="hidden modal">
+        <div class="modal-content" style="max-width: 500px;"> <!-- ฟอร์มเพิ่มเมนู อาจอยากให้ใหญ่กว่าฟอร์มแก้ไข -->
+            <h3 class="text-xl font-bold text-center mb-4">เพิ่มเมนู</h3>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <label class="block mb-2">ชื่อเมนู:</label>
+                <input type="text" name="name" class="w-full border px-4 py-2 rounded-md mb-4" required>
+
+                <label class="block mb-2">รายละเอียด:</label>
+                <textarea name="description" class="w-full border px-4 py-2 rounded-md mb-4"></textarea>
+
+                <label class="block mb-2">ราคา:</label>
+                <input type="number" name="price" class="w-full border px-4 py-2 rounded-md mb-4" step="0.01" required>
+
+                <label class="block mb-2">อัปโหลดรูปภาพ:</label>
+                <!-- พื้นที่ลากวาง + ไอคอน -->
+                <div id="drop-area" class="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-100 hover:bg-gray-200 transition mb-4 flex flex-col items-center justify-center">
+                    <input type="file" name="image" id="fileElem" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+
+                    <i class="material-icons text-6xl text-blue-500 mb-2">cloud_upload</i>
+                    <p class="text-gray-500">ลากไฟล์มาวางที่นี่ หรือ</p>
+                    <button type="button" onclick="document.getElementById('fileElem').click()" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 flex items-center justify-center">
+                        <i class="material-icons mr-2">file_upload</i> เลือกไฟล์
+                    </button>
+                </div>
+                <p id="file-name" class="text-center text-gray-500 mb-4"></p>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="hideForm()" 
+                            class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-400 hover:text-white transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" 
+                            class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition">
+                        บันทึก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- Modal แก้ไขเมนู -->
+ 
+<!-- Modal แก้ไขเมนู -->
+<div id="edit-menu-modal" class="hidden modal">
+    <div class="modal-content w-full max-w-xl p-4 overflow-y-auto max-h-[90vh]">
+      <!-- หัวข้ออยู่บนสุด -->
+      <h3 class="text-2xl font-bold text-center mb-4">แก้ไขเมนู</h3>
+      
+      <!-- รูปอยู่ใต้หัวข้อ แต่ยังคงบนสุดของฟอร์ม -->
+      <img id="edit-menu-preview" 
+           alt="รูปปัจจุบัน" 
+           class="mb-4 w-full max-h-48 object-cover hidden rounded-md">
+  
+      <form method="post" enctype="multipart/form-data" action="{% url 'edit_menu' %}">
+        {% csrf_token %}
+        <input type="hidden" id="edit-menu-id" name="menu_id">
+  
+        <!-- ชื่อเมนู -->
+        <div class="flex items-center mb-4">
+          <label for="edit-menu-name" class="w-24 font-semibold mr-2">ชื่อเมนู:</label>
+          <input type="text" id="edit-menu-name" name="name"
+                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                 required>
+        </div>
+  
+        <!-- รายละเอียด (Textarea) -->
+        <div class="flex items-start mb-4">
+          <label for="edit-menu-description" class="w-24 font-semibold mr-2">รายละเอียด:</label>
+          <textarea id="edit-menu-description" name="description" rows="3"
+                    class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+  
+        <!-- ราคา -->
+        <div class="flex items-center mb-4">
+          <label for="edit-menu-price" class="w-24 font-semibold mr-2">ราคา:</label>
+          <input type="number" id="edit-menu-price" name="price" step="0.01"
+                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                 required>
+        </div>
+  
+        <!-- อัปโหลดรูปภาพ -->
+        <div class="flex items-center mb-6">
+          <label class="w-24 font-semibold mr-2">อัปโหลดรูปภาพ:</label>
+          <input type="file" name="image" accept="image/*"
+                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+  
+        <!-- ปุ่มต่าง ๆ -->
+        <div class="flex justify-end space-x-4">
+          <button type="button" onclick="hideEditForm()" 
+                  class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-400 hover:text-white transition">
+            ยกเลิก
+          </button>
+          <button type="submit"
+                  class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">
+            บันทึก
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  
+
+    <!-- ========== Modal ยืนยันการลบ ========== -->
+    <div id="delete-menu-modal" class="hidden modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4 text-center">ยืนยันการลบเมนู</h3>
+            <p class="text-center">คุณต้องการลบ <strong id="delete-menu-name"></strong> หรือไม่?</p>
+            <input type="hidden" id="delete-menu-id">
+            <button onclick="confirmDelete()" class="bg-red-500 text-white py-2 px-4 rounded-lg w-full mt-4">ลบ</button>
+            <button onclick="hideDeleteModal()" class="bg-gray-400 text-white py-2 px-4 rounded-lg w-full mt-2">ยกเลิก</button>
+        </div>
+    </div>
+
+    <script>
+        /* ========== เพิ่มเมนู ========== */
+        function showForm() {
+            document.getElementById("menu-form").classList.remove("hidden");
+        }
+        function hideForm() {
+            document.getElementById("menu-form").classList.add("hidden");
+        }
+        /* ฟังก์ชันจัดการไฟล์อัปโหลดในฟอร์มเพิ่มเมนู (โชว์ชื่อไฟล์) */
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById("file-name").innerText = "📂 " + file.name;
+            }
+        }
+
+        /* ========== แก้ไขเมนู ========== */
+        function showEditForm(menuId, name, description, price, imageUrl) {
+            document.getElementById("edit-menu-modal").classList.remove("hidden");
             document.getElementById("edit-menu-id").value = menuId;
             document.getElementById("edit-menu-name").value = name;
             document.getElementById("edit-menu-description").value = description;
             document.getElementById("edit-menu-price").value = price;
-        }
 
-        function hideEditForm() {
-            document.getElementById("edit-menu-form").style.display = "none";
-        }
-
-        function confirmDelete(menuId) {
-            let confirmAction = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบเมนูนี้?");
-            if (confirmAction) {
-                document.getElementById("delete-form-" + menuId).submit();
+            const preview = document.getElementById("edit-menu-preview");
+            if (imageUrl) {
+                preview.src = imageUrl;
+                preview.classList.remove("hidden");
+            } else {
+                preview.src = "";
+                preview.classList.add("hidden");
             }
         }
+        function hideEditForm() {
+            document.getElementById("edit-menu-modal").classList.add("hidden");
+        }
+
+        /* ========== ลบเมนู ========== */
+        function showDeleteModal(menuId, menuName) {
+            document.getElementById("delete-menu-modal").classList.remove("hidden");
+            document.getElementById("delete-menu-id").value = menuId;
+            document.getElementById("delete-menu-name").innerText = menuName;
+        }
+        function hideDeleteModal() {
+            document.getElementById("delete-menu-modal").classList.add("hidden");
+        }
+        function confirmDelete() {
+            let menuId = document.getElementById("delete-menu-id").value;
+            document.getElementById("delete-form-" + menuId).submit();
+        }
     </script>
-</head>
-<body>
-    <h2>จัดการเมนูเครื่องดื่ม</h2>
 
-    <button onclick="showForm()">+ เพิ่มเมนู</button>
-
-    <!-- เพิ่มเมนู (ป๊อปอัป) -->
-    <div id="menu-form" style="display: none;">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">บันทึก</button>
-            <button type="button" onclick="hideForm()">ยกเลิก</button>
-        </form>
-    </div>
-
-    <!--แก้ไขเมนู (ป๊อปอัป) -->
-    <div id="edit-menu-form" style="display: none;">
-        <form method="post" action="{% url 'edit_menu' %}">
-            {% csrf_token %}
-            <input type="hidden" id="edit-menu-id" name="menu_id">
-            <label>ชื่อเมนู:</label>
-            <input type="text" id="edit-menu-name" name="name" required>
-            <label>รายละเอียด:</label>
-            <input type="text" id="edit-menu-description" name="description">
-            <label>ราคา:</label>
-            <input type="number" id="edit-menu-price" name="price" step="0.01" required>
-            <button type="submit">บันทึกการแก้ไข</button>
-            <button type="button" onclick="hideEditForm()">ยกเลิก</button>
-        </form>
-    </div>
-
-    <hr>
-
-    <h3>รายการเมนู</h3>
-    <ul>
-        {% for menu in menus %}
-            <li>
-                {% if menu.image %}
-                    <img src="{{ menu.image.url }}" alt="{{ menu.name }}" width="80">
-                {% endif %}
-                <strong>{{ menu.name }}</strong> - {{ menu.price }} บาท
-                <p>{{ menu.description }}</p>
-
-                <button onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}')">แก้ไข</button>
-
-                <form id="delete-form-{{ menu.id }}" action="{% url 'delete_menu' menu.id %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="button" onclick="confirmDelete('{{ menu.id }}')">ลบ</button>
-                </form>
-            </li>
-        {% empty %}
-            <p>ยังไม่มีเมนูในระบบ</p>
-        {% endfor %}
-    </ul>
-
-    <a href="{% url 'menu' %}">กลับไปที่เมนู</a>
 </body>
 </html>

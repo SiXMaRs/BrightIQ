@@ -1,49 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>Menu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เมนูเครื่องดื่ม</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 </head>
-<body>
-    <h2>เมนูเครื่องดื่ม</h2>
+<body class="bg-gray-100 min-h-screen">
 
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">ออกจากระบบ</button>
-    </form>
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold">เมนูเครื่องดื่ม</h2>
 
-    <a href="{% url 'cart' %}">
-        <button>🛒 ดูตะกร้าสินค้า</button>
+        <!-- กริดแสดงเมนู -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 mt-4">
+            {% for menu in menus %}
+            <div class="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                {% if menu.image %}
+                    <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-full h-40 object-cover">
+                {% else %}
+                    <div class="w-full h-40 bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-400">ไม่มีรูปภาพ</span>
+                    </div>
+                {% endif %}
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold text-gray-800">{{ menu.name }}</h2>
+                    <p class="text-sm text-gray-600 mt-1">{{ menu.description|truncatewords:10 }}</p>
+                    <p class="text-md font-bold mt-2 text-[#CC6600]">{{ menu.price }} บาท</p>
+                </div>
+
+                <!-- ปุ่มเพิ่มลงตะกร้า -->
+                <form action="{% url 'add_to_cart' menu.id %}" method="post" class="absolute bottom-4 right-4">
+                    {% csrf_token %}
+                    <button type="submit" class="fab">
+                        <i class="material-icons">add</i>
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-center text-gray-500 mt-10">ยังไม่มีเมนูในระบบ</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ปุ่มดูตะกร้าสินค้า -->
+    <a href="{% url 'cart' %}" class="cart-btn">
+        <i class="material-icons">shopping_cart</i>
     </a>
 
-    {% if request.user.is_staff %}
-        <a href="{% url 'list_menu' %}">
-            <button>จัดการเมนู</button>
-        </a>
-        <a href="{% url 'order_history' %}">
-            <button>ออเดอร์</button>
-        </a>
-        <a href="{% url 'dashboard' %}">
-            <button>Dashboard</button>
-        </a>
-    {% endif %}
+    <!-- CSS สำหรับ Floating Action Button (FAB) -->
+    <style>
+        .fab {
+            background-color: #CD853F;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-    <ul>
-        {% for menu in menus %}
-            <li>
-                {% if menu.image %}
-                    <img src="{{ menu.image.url }}" alt="{{ menu.name }}" width="100">
-                {% endif %}
-                <strong>{{ menu.name }}</strong> - {{ menu.price }} บาท
-                <p>{{ menu.description }}</p>
+        .fab:hover {
+            background-color: #A67C52;
+        }
 
-                <form action="{% url 'add_to_cart' menu.id %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit">เพิ่มลงตะกร้า</button>
-                </form>
-            </li>
-        {% empty %}
-            <p>ยังไม่มีเมนูในระบบ</p>
-        {% endfor %}
-    </ul>
+        .cart-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #CD853F;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .cart-btn:hover {
+            background-color: #A67C52;
+        }
+
+        .cart-btn i {
+            font-size: 36px;
+        }
+    </style>
+
 </body>
 </html>

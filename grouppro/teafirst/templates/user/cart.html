@@ -1,47 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ตะกร้าสินค้า</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 </head>
-<body>
-    <h2>ตะกร้าสินค้าของคุณ</h2>
+<body class="bg-gray-100 min-h-screen">
 
-    <a href="{% url 'menu' %}">
-        <button>🔙 กลับไปที่เมนู</button>
-    </a>
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold text-center mb-6">ตะกร้าสินค้าของคุณ</h2>
 
-    <ul>
-        {% for item in cart_items %}
-            <li>
-                {% if item.menu.image %}
-                    <img src="{{ item.menu.image.url }}" alt="{{ item.menu.name }}" width="100">
-                {% endif %}
-                <strong>{{ item.menu.name }}</strong> - {{ item.menu.price }} บาท x{{ item.quantity }}
+        {% if cart_items %}
+        <ul class="space-y-6">
+            {% for item in cart_items %}
+            <li class="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    {% if item.menu.image %}
+                        <img src="{{ item.menu.image.url }}" alt="{{ item.menu.name }}" class="w-20 h-20 rounded-lg object-cover">
+                    {% endif %}
+                    <div>
+                        <h3 class="text-lg font-semibold">{{ item.menu.name }}</h3>
+                        <p class="text-[#CC6600] font-bold">{{ item.menu.price }} บาท</p>
+                    </div>
+                </div>
 
-                <form action="{% url 'update_cart' item.id %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="increase">
-                    <button type="submit">➕</button>
-                </form>
+                <!-- ปุ่มเพิ่ม/ลดสินค้า -->
+                <div class="flex items-center space-x-4">
+                    <form action="{% url 'update_cart' item.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="decrease">
+                        <button type="submit" class="qty-btn bg-green-100 text-green-700">
+                            <i class="material-icons">remove</i>
+                        </button>
+                    </form>
 
-                <form action="{% url 'update_cart' item.id %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="decrease">
-                    <button type="submit">➖</button>
-                </form>
+                    <span class="text-xl font-semibold">{{ item.quantity }}</span>
+
+                    <form action="{% url 'update_cart' item.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="increase">
+                        <button type="submit" class="qty-btn bg-green-500 text-white">
+                            <i class="material-icons">add</i>
+                        </button>
+                    </form>
+                </div>
             </li>
-        {% empty %}
-            <p>ยังไม่มีสินค้าในตะกร้า</p>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </ul>
 
-    <h3>ราคารวม: {{ total_price }} บาท</h3>
+        <!-- ราคารวม -->
+        <div class="mt-8 text-center">
+            <h3 class="text-xl font-bold">ราคารวม: <span class="text-[#CC6600]">{{ total_price }} บาท</span></h3>
+        </div>
 
-    {% if cart_items %}
-        <form action="{% url 'order' %}" method="post">
-            {% csrf_token %}
-            <button type="submit">🛒 สั่งซื้อ</button>
-        </form>
-    {% endif %}
+        <!-- ปุ่มสั่งซื้อ -->
+        <div class="mt-6 text-center">
+            <form action="{% url 'order' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="order-btn">
+                    🛒 สั่งซื้อ
+                </button>
+            </form>
+        </div>
+
+        {% else %}
+        <p class="text-center text-gray-500">ยังไม่มีสินค้าในตะกร้า</p>
+        {% endif %}
+    </div>
+
+    <!-- CSS สำหรับปุ่ม -->
+    <style>
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .order-btn {
+            background-color: #CD853F;
+            border: 2px solid white;
+            border-radius: 25px;
+            padding: 12px 24px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .order-btn:hover {
+            background-color: #A67C52;
+        }
+    </style>
+
 </body>
 </html>
