@@ -1,0 +1,66 @@
+[
+    {
+        "model": "teafirst.topping",  
+        "pk": 1, 
+        "fields": {
+            "name": "วิปครีม",
+            "price": 15
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 2,
+        "fields": {
+            "name": "ไข่มุกใหญ่",
+            "price": 5
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 3,
+        "fields": {
+            "name": "ไข่มุกเล็ก",
+            "price": 5
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 4,
+        "fields": {
+            "name": "วุ้นมะพร้าว",
+            "price": 5
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 5,
+        "fields": {
+            "name": "วุ้นหลากสี",
+            "price": 5
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 6,
+        "fields": {
+            "name": "โอริโอ้",
+            "price": 10
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 7,
+        "fields": {
+            "name": "สตรอว์เบอร์รี่",
+            "price": 15
+        }
+    },
+    {
+        "model": "teafirst.topping",
+        "pk": 8,
+        "fields": {
+            "name": "ชิ้นคุกกี้",
+            "price": 5
+        }
+    }
+]

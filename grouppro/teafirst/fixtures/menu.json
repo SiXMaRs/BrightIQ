@@ -1,0 +1,24 @@
+[
+    {"model": "teafirst.menu", "pk": 1, "fields": {"name": "เอสเปรสโซ", "description": "กาแฟเข้มข้น หอมกรุ่น สำหรับคอกาแฟตัวจริง", "price": 40, "image": "menu_images/เอสเปรสโซ40.jpg"}},
+    {"model": "teafirst.menu", "pk": 2, "fields": {"name": "คาปูชิโน่", "description": "กาแฟรสเข้มข้น ผสมนมฟองนุ่มละมุน", "price": 40, "image": "menu_images/คาปูชิโน่40.jpg"}},
+    {"model": "teafirst.menu", "pk": 3, "fields": {"name": "คาปูชิโน่คาราเมล", "description": "คาปูชิโน่รสหวานมัน พร้อมคาราเมลหอมหวาน", "price": 40, "image": "menu_images/คาปูชิโน่คาราเมล.jpg"}},
+    {"model": "teafirst.menu", "pk": 4, "fields": {"name": "ลาเต้", "description": "กาแฟรสนุ่ม ผสมนมสดเข้มข้น ดื่มง่าย", "price": 40, "image": "menu_images/ลาเต้40.jpg"}},
+    {"model": "teafirst.menu", "pk": 5, "fields": {"name": "มอคค่า", "description": "กาแฟที่เข้ากับโกโก้ได้อย่างลงตัว หอมเข้มข้น", "price": 40, "image": "menu_images/มอคค่า.jpg"}},
+    {"model": "teafirst.menu", "pk": 6, "fields": {"name": "อเมริกาโน่", "description": "กาแฟดำรสเข้ม หอมกรุ่น ปราศจากนมและน้ำตาล", "price": 40, "image": "menu_images/อเมริกาโน่40.jpg"}},
+    {"model": "teafirst.menu", "pk": 7, "fields": {"name": "อเมริกาโน่น้ำผึ้ง", "description": "กาแฟดำเข้มข้น เติมความหวานจากน้ำผึ้งแท้", "price": 40, "image": "menu_images/อเมริกาโน่น้ำผึ้ง40.jpg"}},
+    {"model": "teafirst.menu", "pk": 8, "fields": {"name": "อเมริกาโน่น้ำผึ้งมะนาว", "description": "กาแฟดำผสมน้ำผึ้งและมะนาว หอมสดชื่น", "price": 45, "image": "menu_images/อเมริกาโน่น้ำผึ้งมะนาว.jpg"}},
+    {"model": "teafirst.menu", "pk": 9, "fields": {"name": "เนสกาแฟ", "description": "กาแฟชงสำเร็จรูป รสเข้มข้น หอมนุ่มละมุน", "price": 30, "image": "menu_images/เนสกาแฟ30.jpg"}},
+    {"model": "teafirst.menu", "pk": 10, "fields": {"name": "กาแฟโบราณ", "description": "กาแฟโบราณหอมเข้มข้น กลิ่นหอมอ่อนๆ ของคั่วสด", "price": 30, "image": "menu_images/กาแฟโบราณ.jpg"}},
+    {"model": "teafirst.menu", "pk": 11, "fields": {"name": "โอเลี้ยง", "description": "กาแฟดำโบราณ รสเข้มข้น หอมกรุ่น", "price": 25, "image": "menu_images/โอเลี้ยง.jpg"}},
+    {"model": "teafirst.menu", "pk": 12, "fields": {"name": "ชานม", "description": "ชานมหอมกรุ่น รสชาติหวานละมุน", "price": 25, "image": "menu_images/ชานม.png"}},
+    {"model": "teafirst.menu", "pk": 13, "fields": {"name": "ชานมโกโก้", "description": "ชานมสูตรพิเศษ ผสมโกโก้เข้มข้น", "price": 30, "image": "menu_images/ชานมโกโก้.jpg"}},
+    {"model": "teafirst.menu", "pk": 14, "fields": {"name": "ชานมเผือก", "description": "ชานมรสเผือกหอมมัน กลมกล่อม", "price": 25, "image": "menu_images/ชานมเผือก.png"}},
+    {"model": "teafirst.menu", "pk": 15, "fields": {"name": "ชานมแคนตาลูป", "description": "ชานมรสแคนตาลูป หอมสดชื่น", "price": 25, "image": "menu_images/ชานมแคนตาลูป.png"}},
+    {"model": "teafirst.menu", "pk": 16, "fields": {"name": "แดงโซดา", "description": "น้ำแดงหวานหอม ซ่าด้วยโซดา สดชื่นสุดๆ", "price": 25, "image": "menu_images/แดงโซดา25.jpg"}},
+    {"model": "teafirst.menu", "pk": 17, "fields": {"name": "เขียวมะนาวโซดา", "description": "น้ำเขียวหวานอมเปรี้ยว ผสมโซดาซ่าๆ", "price": 30, "image": "menu_images/เขียวมะนาวโซดา30.png"}},
+    {"model": "teafirst.menu", "pk": 18, "fields": {"name": "ลิ้นจี่ปั่น", "description": "ลิ้นจี่ปั่นสด รสชาติหวานอมเปรี้ยว สดชื่น", "price": 40, "image": "menu_images/ลิ้นจี่ปั่น40.jpg"}},
+    {"model": "teafirst.menu", "pk": 19, "fields": {"name": "ส้มปั่น", "description": "น้ำส้มปั่นสด รสเปรี้ยวอมหวาน", "price": 40, "image": "menu_images/ส้มปั่น40.jpg"}},
+    {"model": "teafirst.menu", "pk": 20, "fields": {"name": "แตงโมปั่น", "description": "แตงโมปั่นสด หวานเย็นชื่นใจ", "price": 40, "image": "menu_images/แตงโมปั่น40.jpg"}},
+    {"model": "teafirst.menu", "pk": 21, "fields": {"name": "มะพร้าวปั่น", "description": "น้ำมะพร้าวปั่น หวานหอม สดชื่น", "price": 40, "image": "menu_images/มะพร้าวปั่น40.jpg"}}
+  ]
+  

@@ -10,15 +10,31 @@ class Menu(models.Model):
     def __str__(self):
         return self.name
 
+class Topping(models.Model):
+    name = models.CharField(max_length=255)
+    price = models.IntegerField()
 
+    def __str__(self):
+        return self.name
+    
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    toppings = models.ManyToManyField(Topping, blank=True)
+    total_price = models.IntegerField(default=0)  # ✅ เพิ่มฟิลด์นี้
 
-    def __str__(self):
-        return f"{self.user.username} - {self.menu.name} x{self.quantity}"
-    
+    def save(self, *args, **kwargs):
+        is_new = self.id is None  # ✅ เช็คว่าเป็น object ใหม่หรือไม่
+        
+        super().save(*args, **kwargs)  # ✅ บันทึกก่อนครั้งแรกถ้าเป็น object ใหม่
+
+        if is_new:
+            # ✅ คำนวณราคาของ toppings หลังจาก instance ถูกบันทึก
+            topping_price = sum(topping.price for topping in self.toppings.all())
+            self.total_price = (self.menu.price + topping_price) * self.quantity
+            super().save(*args, **kwargs)
+ 
 class Order(models.Model):
     STATUS_CHOICES = [
         ('waiting', 'wait'),
@@ -30,7 +46,8 @@ class Order(models.Model):
     total_price = models.IntegerField()
     ordered_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='order_images/', blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')  # เพิ่มสถานะ
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
+    toppings = models.ManyToManyField(Topping, blank=True)  # เพิ่มท็อปปิ้งในคำสั่งซื้อ
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"

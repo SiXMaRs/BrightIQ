@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.http import JsonResponse
+import json
+from django.core.paginator import Paginator
 from .forms import *
 from .models import *
 import gradio as gr
@@ -10,8 +13,8 @@ import plotly.express as px
 import plotly.io as pio
 from django.db.models import Sum,Count
 from django.db.models.functions import TruncMonth, TruncDay
-from django.shortcuts import render
 import threading
+
 import calendar
 
 
@@ -50,71 +53,102 @@ def menu_view(request):
     menus = Menu.objects.all()
     return render(request, 'user/menu.html', {'menus': menus})
 
-@login_required(login_url='/login/')
-def add_to_cart_view(request, menu_id):
-    menu = get_object_or_404(Menu, id=menu_id)
-    cart_item, created = Cart.objects.get_or_create(user=request.user, menu=menu)
-
-    if not created:
-        cart_item.quantity += 1 
-        cart_item.save()
-
-    return redirect('cart')
-
-@login_required(login_url='/login/')
-def cart_view(request):
-    cart_items = Cart.objects.filter(user=request.user)
-    total_price = sum(item.menu.price * item.quantity for item in cart_items)
-    
-    return render(request, 'user/cart.html', {'cart_items': cart_items, 'total_price': total_price})
-
-@login_required(login_url='/login/')
-def update_cart_view(request, cart_id):
-    cart_item = get_object_or_404(Cart, id=cart_id, user=request.user)
+@login_required
+def add_to_cart(request, menu_id):
+    menu_item = get_object_or_404(Menu, id=menu_id)
+    user = request.user
 
     if request.method == 'POST':
-        action = request.POST.get('action')
+        topping_ids = request.POST.getlist('toppings')
+        selected_toppings = Topping.objects.filter(id__in=topping_ids)
 
-        if action == "increase":
-            cart_item.quantity += 1
-            cart_item.save()
-        elif action == "decrease":
-            if cart_item.quantity > 1:
-                cart_item.quantity -= 1
-                cart_item.save()
-            else:
-                cart_item.delete()  
+        cart_item = Cart(user=user, menu=menu_item, quantity=1)
+        cart_item.save()
 
-    return redirect('cart')
+        cart_item.toppings.add(*selected_toppings)
 
-@login_required(login_url='/login/')
-def order_view(request):
+        topping_price = sum(topping.price for topping in selected_toppings)
+        cart_item.total_price = (menu_item.price + topping_price) * cart_item.quantity
+        cart_item.save()
+
+        return redirect('cart')
+
+    return render(request, 'user/add_to_cart.html', {'menu_item': menu_item, 'toppings': Topping.objects.all()})
+
+@login_required
+def cart_view(request):
     cart_items = Cart.objects.filter(user=request.user)
 
-    if not cart_items:
-        return redirect('cart')
-    
+    total_cost = 0 
+
     for item in cart_items:
-        Order.objects.create(
-            user=request.user,
+        topping_price = sum(topping.price for topping in item.toppings.all())  
+        item.total_price = item.quantity * (item.menu.price + topping_price)  
+        item.save()
+        
+        total_cost += item.total_price  
+
+    return render(request, 'user/cart.html', {'cart_items': cart_items, 'total_cost': total_cost})
+
+
+@login_required
+def update_cart_quantity(request, cart_id, action):
+    cart_item = get_object_or_404(Cart, id=cart_id, user=request.user)
+
+    if action == "increase":
+        cart_item.quantity += 1  
+    elif action == "decrease" and cart_item.quantity > 1:
+        cart_item.quantity -= 1  
+
+    topping_price = sum(topping.price for topping in cart_item.toppings.all())
+    cart_item.total_price = cart_item.quantity * (cart_item.menu.price + topping_price)
+
+    cart_item.save()  
+    return redirect('cart')  
+
+@login_required
+def remove_from_cart(request, cart_id):
+    cart_item = get_object_or_404(Cart, id=cart_id, user=request.user)
+    cart_item.delete()
+    return redirect('cart')
+
+@login_required
+def place_order(request):
+    user = request.user
+    cart_items = Cart.objects.filter(user=user)
+
+    if not cart_items:
+        return redirect('cart_view')
+
+    for item in cart_items:
+        total_price = item.total_price
+
+        menu_image = item.menu.image if item.menu.image else None
+
+        order = Order.objects.create(
+            user=user,
             menu=item.menu,
             quantity=item.quantity,
-            total_price=item.menu.price * item.quantity,
-            image=item.menu.image 
+            total_price=total_price,
+            status='waiting'
         )
+
+        if menu_image:
+            order.image = menu_image
+        
+        order.toppings.set(item.toppings.all()) 
+        order.save() 
+
     cart_items.delete()
 
     return redirect('menu')
 
 
 
-
-
-
 #Admin
 @login_required(login_url='/login/')
 def add_menu_view(request):
-    if not request.user.is_staff: 
+    if not request.user.is_staff:
         return redirect('menu')
 
     if request.method == 'POST':
@@ -124,8 +158,13 @@ def add_menu_view(request):
             return redirect('list_menu')
     else:
         form = MenuForm()
-    menus = Menu.objects.all()
-    return render(request, 'admin/list_menu.html', {'form': form, 'menus': menus})
+
+    menus = Menu.objects.all().order_by('-id')  # ✅ เรียงจากใหม่ไปเก่า
+    paginator = Paginator(menus, 5)  # ✅ แสดง 5 รายการต่อหน้า
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'admin/list_menu.html', {'form': form, 'page_obj': page_obj})
 
 @login_required(login_url='/login/')
 def edit_menu_view(request):
@@ -135,11 +174,13 @@ def edit_menu_view(request):
     if request.method == 'POST':
         menu_id = request.POST.get('menu_id')
         menu = get_object_or_404(Menu, id=menu_id)
-        form = MenuForm(request.POST, instance=menu)
+        form = MenuForm(request.POST, request.FILES, instance=menu)  # ✅ รองรับการอัปโหลดไฟล์
         if form.is_valid():
             form.save()
-            return redirect('list_menu') 
+            return redirect('list_menu')
+    
     return redirect('list_menu')
+
 
 @login_required(login_url='/login/')
 def delete_menu_view(request, menu_id):
@@ -197,148 +238,106 @@ def create_order_from_store(request):
     return render(request, 'admin/order_from_store.html', {'menus': menus})
 
 
-# Gradio
-# ตั้งค่าธีมของ Plotly
-pio.templates.default = "plotly_dark"
+def get_sales_data():
+    print("🔄 กำลังดึงข้อมูลยอดขาย 7 วันล่าสุด...")
 
-# ✅ ฟังก์ชันดึงข้อมูลยอดขายตามเดือนและวัน
-def get_sales_data(selected_month=None):
-    print(f"🔄 กำลังดึงข้อมูลสำหรับเดือน: {selected_month}")
+    # ✅ ดึงข้อมูลแบบ raw (values_list) แทน annotate
+    raw_data = list(Order.objects.values_list("ordered_at", "total_price"))
 
-    data = (
-        Order.objects.annotate(
-            month=TruncMonth("ordered_at"),
-            day=TruncDay("ordered_at")
-        )
-        .values("month", "day")
-        .annotate(
-            total_sales=Sum("total_price"),
-            order_count=Count("id")
-        )
-        .order_by("day")
-    )
+    if not raw_data:
+        print("⚠️ ไม่มีข้อมูลยอดขาย!")
+        return pd.DataFrame({"Day": [], "Total Sales": [], "Text Display": []})
 
-    df = pd.DataFrame(list(data))
+    # สร้าง DataFrame จาก raw_data
+    df = pd.DataFrame(raw_data, columns=["ordered_at", "Total Sales"])
 
-    if df.empty:
-        print("⚠️ ไม่มีข้อมูลยอดขายในช่วงเวลานี้!")
-        return pd.DataFrame({"Day": [], "Total Sales": [], "Order Count": []})
+    # แปลง ordered_at เป็นวันที่เท่านั้น
+    df["Day"] = pd.to_datetime(df["ordered_at"]).dt.strftime("%Y-%m-%d")
 
-    df["Day"] = pd.to_datetime(df["day"]).dt.strftime("%Y-%m-%d")
-    df.rename(columns={"total_sales": "Total Sales", "order_count": "Order Count"}, inplace=True)
+    # กรองข้อมูลให้เป็น 7 วันล่าสุด
+    today = pd.to_datetime("today").normalize()
+    last_7_days = pd.date_range(end=today, periods=7, freq="D").strftime("%Y-%m-%d")
+    
+    # รวมยอดขายต่อวัน (เฉพาะตัวเลข)
+    df = df.groupby("Day", as_index=False)[["Total Sales"]].sum()
 
-    # ✅ กรองเฉพาะเดือนที่เลือก
-    if selected_month and selected_month != "All":
-        df = df[df["Day"].str.startswith(selected_month)]
+    # สร้าง DataFrame สำหรับวันที่ครบทุกวัน (ถ้ามีวันไหนไม่มีข้อมูล ให้เป็น 0)
+    df_full = pd.DataFrame({"Day": last_7_days})
+    df = df_full.merge(df, on="Day", how="left").fillna({"Total Sales": 0}) 
 
-        # ✅ สร้างช่วงวันที่ให้ครบทุกวันของเดือน
-        year, month = map(int, selected_month.split("-"))
-        num_days = calendar.monthrange(year, month)[1]  # ดึงจำนวนวันในเดือนนั้น
-        all_days = pd.date_range(start=f"{selected_month}-01", periods=num_days, freq="D").strftime("%Y-%m-%d")
-        df_full = pd.DataFrame({"Day": all_days})
+    # แปลง Total Sales เป็น float และกำหนดค่า text แสดงผล
+    df["Total Sales"] = df["Total Sales"].astype(float)
+    df["Text Display"] = df["Total Sales"].apply(lambda x: f"{x:.2f} ฿")
 
-        # ✅ รวมข้อมูลเข้ากับ `df` (ถ้าไม่มีค่า ให้ใส่ 0)
-        df = df_full.merge(df, on="Day", how="left").fillna({"Total Sales": 0, "Order Count": 0})
-
-    print("📊 DataFrame ที่ใช้สร้างกราฟ (หลังเติมข้อมูลครบเดือน):\n", df.head(10))  # ✅ แสดง 10 แถวแรก
-    print(df.info())  # ✅ ตรวจสอบโครงสร้าง
+    print("📊 DataFrame หลังเติม 7 วันล่าสุด:\n", df)
     return df
 
-# ✅ ฟังก์ชันสร้างกราฟ
-def generate_charts(selected_month="All"):
-    df = get_sales_data(selected_month)
+# ฟังก์ชันสร้างกราฟที่ถูกต้อง
+def generate_charts():
+    df = get_sales_data()
 
     if df.empty:
-        print("❌ ไม่มีข้อมูลสำหรับเดือนที่เลือก")
+        print("ไม่มีข้อมูลยอดขาย")
         return (
             px.bar(title="No Sales Data"), 
-            px.line(title="No Sales Data"), 
-            px.pie(title="No Sales Data"), 
-            px.bar(title="No Orders Data"),
-            "💰 Total Sales: 0 ฿ | 📦 Total Orders: 0", 
-            {}, {}
+            "ยอดขาย: 0 ฿", 
+            {}
         )
 
-    df["Total Sales"] = df["Total Sales"].astype(float)  # ✅ บังคับเป็น float
-    df["Order Count"] = df["Order Count"].astype(int)  # ✅ บังคับเป็น int
+    df = df.reset_index(drop=True)
 
     total_sales_month = df["Total Sales"].sum()
-    total_orders_month = df["Order Count"].sum()
-
     total_sales_per_day = dict(zip(df["Day"], df["Total Sales"]))
-    total_orders_per_day = dict(zip(df["Day"], df["Order Count"]))
 
-    df["Day"] = df["Day"].astype(str)  # ✅ บังคับให้เป็น string แก้ปัญหาแสดงเวลา 12:00
+    df["Day"] = df["Day"].astype(str)
 
-    # ✅ บังคับให้ Plotly เรียงลำดับวันถูกต้อง
-    category_orders = {"Day": sorted(df["Day"].unique())}
-
-    # ✅ Bar Chart (ยอดขายรายวัน)
+    print("📊 DataFrame ที่ถูกส่งเข้า Plotly:\n", df.to_dict())
     bar_chart = px.bar(
-        df, x="Day", y="Total Sales", title=f"Daily Sales in {selected_month}",
-        text=df["Total Sales"].astype(str), category_orders=category_orders
+        df,
+        x="Day",
+        y="Total Sales",  
+        title="Daily Sales (Last 7 Days)",
+        text=df["Text Display"],  
+        hover_data={"Text Display": True},
+        category_orders={"Day": sorted(df["Day"].unique())}
     )
+
     bar_chart.update_xaxes(type="category", categoryorder="array", categoryarray=sorted(df["Day"].unique()))
-    bar_chart.update_traces(texttemplate='%{text} ฿', textposition='outside')
-
-    # ✅ Line Chart (แนวโน้มยอดขาย)
-    line_chart = px.line(
-        df, x="Day", y="Total Sales", title=f"Sales Trend in {selected_month}",
-        text=df["Total Sales"].astype(str), category_orders=category_orders
+    bar_chart.update_yaxes(type="linear", range=[0, max(df["Total Sales"].max(), 10)])  
+    bar_chart.update_layout(
+        yaxis=dict(type="linear", range=[0, df["Total Sales"].max() + 10])  
     )
-    line_chart.update_xaxes(type="category", categoryorder="array", categoryarray=sorted(df["Day"].unique()))
-    line_chart.update_traces(mode="lines+markers+text", textposition="top center", texttemplate='%{text} ฿')
-
-
-    # ✅ Bar Chart (จำนวนคำสั่งซื้อรายวัน)
-    order_chart = px.bar(
-        df, x="Day", y="Order Count", title=f"Daily Order Count in {selected_month}",
-        text=df["Order Count"].astype(str), category_orders={"Day": sorted(df["Day"].unique())}
+    bar_chart.update_layout(
+        title="ยอดขายรายวัน (7 วันล่าสุด)",  
+        xaxis_title="วันที่", 
+        yaxis_title="ยอดขาย (บาท)", 
     )
-    order_chart.update_traces(texttemplate='%{text} Orders', textposition='outside')
+    bar_chart.update_traces(texttemplate='%{text}', textposition='outside')
 
-    print("✅ Charts Generated!")
-
+    print("Charts Generated!")
     return (
-        bar_chart, line_chart, order_chart,
-        f"💰 Total Sales: {total_sales_month:.2f} ฿ | 📦 Total Orders: {total_orders_month}",
-        total_sales_per_day, total_orders_per_day
+        bar_chart,
+        f"ยอดขายรวม 7 วัน: {total_sales_month:.2f} ฿",
+        total_sales_per_day
     )
 
-# ✅ ฟังก์ชันสร้าง Gradio Dashboard
 def gradio_dashboard():
     print("✅ กำลังรัน Gradio...")
 
-    df = get_sales_data()
-    available_months = ["All"] + sorted(df["Day"].str[:7].unique().tolist()) if not df.empty else ["All"]
-
     with gr.Blocks() as demo:
-        gr.Markdown("### 📊 Sales & Orders Dashboard - Data from Database")
+        gr.Markdown("ยอดขาย 7 วัน")
 
-        selected_month = gr.Dropdown(choices=available_months, value="All", label="🔍 Select Month")
-
-        bar_chart, line_chart, order_chart, total_sales, total_sales_per_day, total_orders_per_day = generate_charts("All")
+        bar_chart, total_sales_text, _ = generate_charts()
 
         bar_plot = gr.Plot(bar_chart)
-        line_plot = gr.Plot(line_chart)
-        order_plot = gr.Plot(order_chart)
-        total_sales_text = gr.Textbox(value=total_sales, interactive=False, label="💰 Total Sales & Orders")
+        total_sales_display = gr.Textbox(value=total_sales_text, interactive=False, label="ยอดขายรวม 7 วัน")
 
-        # ✅ อัปเดตเมื่อเลือกเดือน
-        selected_month.change(
-            generate_charts,
-            inputs=[selected_month],
-            outputs=[bar_plot, line_plot, order_plot, total_sales_text]
-        )
-
-    print("✅ Gradio Loaded!")
+    print(" Gradio Loaded!")
     demo.launch(server_name="127.0.0.1", server_port=7860, share=False, inline=False)
 
-
-# ✅ รัน Gradio
 gradio_url = "http://127.0.0.1:7860/"
 if not any(thread.name == "GradioThread" for thread in threading.enumerate()):
-    print("🚀 เริ่มรัน Gradio บนพอร์ต 7860")
+    print("เริ่มรัน Gradio บนพอร์ต 7860")
     thread = threading.Thread(target=gradio_dashboard, daemon=True, name="GradioThread")
     thread.start()
 

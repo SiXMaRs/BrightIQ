@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen">
+    <div class="flex justify-between items-center px-8 py-4 bg-[#DEB887] shadow-md">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'menu' %}">
+                <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
+            </a>
+            <div class="text-2xl text-white">
+                TEAFIRST
+            </div>
+        </div>
+
+        <div class="flex space-x-8">
+            {% if user.is_superuser %}
+                <a href="{% url 'list_menu' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    เพิ่มเมนู
+                </a>
+                <a href="{% url 'order_history' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    รายการออเดอร์
+                </a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="text-red-600 text-lg  hover:text-red-400 transition">
+                 ออกจากระบบ
+            </a>
+        </div>
+    </div>
     <h1>Sales Dashboard</h1>
     <iframe src="{{ gradio_url }}" width="100%" height="700" frameborder="0"></iframe>
 </body>

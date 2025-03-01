@@ -11,62 +11,88 @@
     <!-- Material Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6">
+<body class="bg-gray-100 min-h-screen">
 
-    <div class="max-w-4xl w-full bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center mb-6">ประวัติการสั่งซื้อทั้งหมด</h2>
-
-        <!-- ปุ่มเพิ่มออเดอร์จากหน้าร้าน -->
-        <div class="text-center mb-6">
-            <a href="{% url 'create_order_from_store' %}" class="add-order-btn">
-                ➕ เพิ่มออเดอร์จากหน้าร้าน
+    <div class="flex justify-between items-center px-8 py-4 bg-[#DEB887] shadow-md">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'menu' %}">
+                <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
             </a>
+            <div class="text-2xl text-white">
+                TEAFIRST
+            </div>
         </div>
 
-        {% if orders %}
-        <ul class="space-y-6">
-            {% for order in orders %}
-            <li class="relative bg-white p-4 rounded-lg shadow-md border-2 border-[#DEB887] flex flex-col md:flex-row items-center justify-between">
-                
-                <!-- สถานะอยู่มุมขวาบน -->
-                <span class="absolute top-2 right-4 text-lg font-semibold 
-                    {% if order.status == 'waiting' %} text-yellow-500 
-                    {% elif order.status == 'completed' %} text-green-500 
-                    {% endif %}">
-                    {% if order.status == 'waiting' %} รออนุมัติ 
-                    {% elif order.status == 'completed' %} สำเร็จ 
-                    {% endif %}
-                </span>
-
-                <div class="flex items-center space-x-4">
-                    {% if order.image %}
-                        <img src="{{ order.image.url }}" alt="{{ order.menu.name }}" class="w-20 h-20 rounded-lg object-cover">
-                    {% endif %}
-                    <div>
-                        <h3 class="text-lg font-semibold">{{ order.menu.name }}</h3>
-                        <p class="text-gray-700"><strong>ชื่อผู้สั่ง:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
-                        <p class="text-gray-700"><strong>จำนวน:</strong> {{ order.quantity }}</p>
-                        <p class="text-[#CC6600] font-bold"><strong>ราคารวม:</strong> {{ order.total_price }} บาท</p>
-                        <p class="text-gray-600 text-sm"><strong>วันที่สั่งซื้อ:</strong> {{ order.ordered_at }}</p>
+        <div class="flex space-x-8">
+            {% if user.is_superuser %}
+                <a href="{% url 'list_menu' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    เพิ่มเมนู
+                </a>
+                <a href="{% url 'order_history' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    รายการออเดอร์
+                </a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="text-red-600 text-lg  hover:text-red-400 transition">
+                 ออกจากระบบ
+            </a>
+        </div>
+    </div>
+    <div class="flex justify-center items-center h-auto pt-6">
+        <div class="max-w-screen-lg w-full p-6  mx-auto">
+            <h2 class="text-2xl font-bold text-center mb-6">ประวัติการสั่งซื้อทั้งหมด</h2>
+    
+            <!-- ปุ่มเพิ่มออเดอร์จากหน้าร้าน -->
+            <div class="text-center mb-6">
+                <a href="{% url 'create_order_from_store' %}" class="add-order-btn">
+                    ➕ เพิ่มออเดอร์จากหน้าร้าน
+                </a>
+            </div>
+    
+            {% if orders %}
+            <ul class="space-y-6">
+                {% for order in orders %}
+                <li class="relative bg-white p-4 rounded-lg shadow-md border-2 border-[#DEB887] flex flex-col md:flex-row items-center justify-between">
+                    
+                    <!-- สถานะอยู่มุมขวาบน -->
+                    <span class="absolute top-2 right-4 text-lg font-semibold 
+                        {% if order.status == 'waiting' %} text-yellow-500 
+                        {% elif order.status == 'completed' %} text-green-500 
+                        {% endif %}">
+                        {% if order.status == 'waiting' %} รออนุมัติ 
+                        {% elif order.status == 'completed' %} สำเร็จ 
+                        {% endif %}
+                    </span>
+    
+                    <div class="flex items-center space-x-4">
+                        {% if order.image %}
+                            <img src="{{ order.image.url }}" alt="{{ order.menu.name }}" class="w-20 h-20 rounded-lg object-cover">
+                        {% endif %}
+                        <div>
+                            <h3 class="text-lg font-semibold">{{ order.menu.name }}</h3>
+                            <p class="text-gray-700"><strong>ชื่อผู้สั่ง:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
+                            <p class="text-gray-700"><strong>จำนวน:</strong> {{ order.quantity }}</p>
+                            <p class="text-[#CC6600] font-bold"><strong>ราคารวม:</strong> {{ order.total_price }} บาท</p>
+                            <p class="text-gray-600 text-sm"><strong>วันที่สั่งซื้อ:</strong> {{ order.ordered_at }}</p>
+                        </div>
                     </div>
-                </div>
-
-                <!-- ปุ่มเปลี่ยนสถานะเป็นสำเร็จ (ใช้ไอคอนเครื่องหมายถูกต้อง ✅) -->
-                {% if order.status == 'waiting' %}
-                <form method="post" class="mt-4 md:mt-0">
-                    {% csrf_token %}
-                    <input type="hidden" name="order_id" value="{{ order.id }}">
-                    <button type="submit" class="success-btn">
-                        <i class="material-icons">check_circle</i>
-                    </button>
-                </form>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-center text-gray-500 mt-10">ยังไม่มีคำสั่งซื้อ</p>
-        {% endif %}
+    
+                    <!-- ปุ่มเปลี่ยนสถานะเป็นสำเร็จ (ใช้ไอคอนเครื่องหมายถูกต้อง ✅) -->
+                    {% if order.status == 'waiting' %}
+                    <form method="post" class="mt-4 md:mt-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <button type="submit" class="success-btn">
+                            <i class="material-icons">check_circle</i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-center text-gray-500 mt-10">ยังไม่มีคำสั่งซื้อ</p>
+            {% endif %}
+        </div>
     </div>
 
     <!-- ปุ่มกลับไปที่เมนู -->

@@ -73,56 +73,101 @@
     </style>
 
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6">
+<body class="bg-gray-100 min-h-screen">
 
-    <div class="max-w-4xl w-full bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center mb-6">จัดการเมนูเครื่องดื่ม</h2>
+    <div class="flex justify-between items-center px-8 py-4 bg-[#DEB887] shadow-md">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'menu' %}">
+                <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
+            </a>
+            <div class="text-2xl text-white">
+                TEAFIRST
+            </div>
+        </div>
 
-        <!-- FAB ปุ่มเพิ่มเมนู -->
-        <button onclick="showForm()" class="fab">
-            <i class="material-icons">add</i>
-        </button>
-
-        <h3 class="text-xl font-semibold my-4">รายการเมนู</h3>
-
-        {% if menus %}
-        <ul class="space-y-4">
-            {% for menu in menus %}
-            <li class="bg-gray-50 p-4 rounded-lg shadow-md flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    {% if menu.image %}
-                        <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-16 h-16 rounded-lg object-cover">
-                    {% endif %}
-                    <div>
-                        <h3 class="text-lg font-semibold">{{ menu.name }}</h3>
-                        <p class="text-gray-600">{{ menu.description }}</p>
-                        <p class="text-[#CC6600] font-bold">{{ menu.price }} บาท</p>
-                    </div>
-                </div>
-
-                <!-- ปุ่มแก้ไข & ลบ ย้ายมาอยู่ฝั่งขวาสุด ติดกัน -->
-                <div class="flex items-center space-x-4 justify-end">
-                    <button class="icon-btn text-blue-500" 
-                            onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}', '{% if menu.image %}{{ menu.image.url }}{% endif %}')">
-                        <i class="material-icons">edit</i>
-                    </button>
-
-                    <button class="icon-btn text-red-500" 
-                            onclick="showDeleteModal('{{ menu.id }}', '{{ menu.name }}')">
-                        <i class="material-icons">delete</i>
-                    </button>
-
-                    <form id="delete-form-{{ menu.id }}" action="{% url 'delete_menu' menu.id %}" method="post" class="hidden">
-                        {% csrf_token %}
-                    </form>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-center text-gray-500 mt-10">ยังไม่มีเมนูในระบบ</p>
-        {% endif %}
+        <div class="flex space-x-8">
+            {% if user.is_superuser %}
+                <a href="{% url 'list_menu' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    เพิ่มเมนู
+                </a>
+                <a href="{% url 'order_history' %}" class="text-white text-lg  hover:text-gray-200 transition">
+                    รายการออเดอร์
+                </a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="text-red-600 text-lg  hover:text-red-400 transition">
+                 ออกจากระบบ
+            </a>
+        </div>
     </div>
+
+    <button onclick="showForm()" class="fab">
+        <i class="material-icons">add</i>
+    </button>
+    
+    <!-- ✅ ปรับระยะห่างเนื้อหาหลักให้ชิด Navbar มากขึ้น -->
+    <div class="flex justify-center items-center h-auto pt-6">
+        <div class="max-w-screen-md w-full p-6 mx-auto">
+            <h2 class="text-2xl font-bold text-center mb-6">จัดการเมนูเครื่องดื่ม</h2>
+    
+            <h3 class="text-xl font-semibold my-4">รายการเมนู</h3>
+    
+            {% if page_obj %}
+            <ul class="space-y-4">
+                {% for menu in page_obj %}
+                <li class="bg-gray-50 p-4 rounded-lg shadow-md flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        {% if menu.image %}
+                            <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-16 h-16 rounded-lg object-cover">
+                        {% endif %}
+                        <div>
+                            <h3 class="text-lg font-semibold">{{ menu.name }}</h3>
+                            <p class="text-gray-600">{{ menu.description }}</p>
+                            <p class="text-[#CC6600] font-bold">{{ menu.price }} บาท</p>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มแก้ไข & ลบ -->
+                    <div class="flex items-center space-x-4">
+                        <button class="icon-btn text-blue-500" 
+                                onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}', '{% if menu.image %}{{ menu.image.url }}{% endif %}')">
+                            <i class="material-icons">edit</i>
+                        </button>
+
+                        <button class="icon-btn text-red-500" 
+                                onclick="showDeleteModal('{{ menu.id }}', '{{ menu.name }}')">
+                            <i class="material-icons">delete</i>
+                        </button>
+
+                        <form id="delete-form-{{ menu.id }}" action="{% url 'delete_menu' menu.id %}" method="post" class="hidden">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- ✅ Pagination -->
+            <div class="flex justify-center mt-6">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="px-3 py-2 mx-1 bg-gray-200 text-gray-700 rounded">หน้าแรก</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 mx-1 bg-gray-200 text-gray-700 rounded">ก่อนหน้า</a>
+                {% endif %}
+
+                <span class="px-3 py-2 mx-1 bg-blue-500 text-white rounded">หน้า {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 mx-1 bg-gray-200 text-gray-700 rounded">ถัดไป</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 mx-1 bg-gray-200 text-gray-700 rounded">หน้าสุดท้าย</a>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <p class="text-center text-gray-500 mt-10">ยังไม่มีเมนูในระบบ</p>
+        {% endif %}
+        </div>
+    </div>
+    
+        
 
     <!-- ========== Modal เพิ่มเมนู ========== -->
     <div id="menu-form" class="hidden modal">
