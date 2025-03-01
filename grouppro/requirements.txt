@@ -3,5 +3,6 @@ scikit-learn
 pandas
 pillow
 plotly
-gradio==3.50.2
+gradio
 django-tailwind
+numpy==1.23.5
