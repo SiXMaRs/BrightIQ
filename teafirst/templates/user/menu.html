@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เมนูเครื่องดื่ม</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    {% load static %}
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+
+    <style>
+        #kebab-menu {
+            display: none;  /* ซ่อนเมนูเริ่มต้น */
+            position: absolute;
+            top: 50px;
+            right: 0px;
+            width: 200px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        #kebab-menu a {
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+            color: black;
+        }
+
+        #kebab-menu a:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Headbar with Kebab Button -->
+    <div class="flex justify-between items-center p-4 bg-[#DEB887]">
+        <!-- โลโก้และข้อความ Tea First อยู่ข้างๆ กัน -->
+        <div class="flex items-center space-x-4">
+            <img src="/media/TEA%20FIRST.png" alt="Cafe Login" class="w-16 h-16 rounded-full object-contain">
+            <div class="text-2xl font-bold text-white">
+                Tea First
+            </div>
+        </div>
+
+        <!-- Kebab Menu -->
+        <div class="relative">
+            <button id="kebab-menu-btn" class="p-2 bg-[#CD853F] text-white rounded-lg">
+                <i class="material-icons">more_vert</i>
+            </button>
+
+            <div id="kebab-menu">
+                {% if user.is_superuser %}
+                    <a href="{% url 'list_menu' %}" class="text-black">หน้าเมนู</a>
+                    <a href="{% url 'create_order_from_store' %}" class="text-black">เพิ่มออเดอร์จากร้าน</a>
+                    <a href="{% url 'order_history' %}" class="text-black">ประวัติการสั่งซื้อ</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="text-black">ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- กริดแสดงเมนู -->
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold">เมนูเครื่องดื่ม</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 mt-4">
+            {% for menu in menus %}
+            <div class="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                {% if menu.image %}
+                    <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-full h-40 object-cover">
+                {% else %}
+                    <div class="w-full h-40 bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-400">ไม่มีรูปภาพ</span>
+                    </div>
+                {% endif %}
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold text-gray-800">{{ menu.name }}</h2>
+                    <p class="text-sm text-gray-600 mt-1">{{ menu.description|truncatewords:10 }}</p>
+                    <p class="text-md font-bold mt-2 text-[#CC6600]">{{ menu.price }} บาท</p>
+                </div>
+
+                <form action="{% url 'add_to_cart' menu.id %}" method="post" class="absolute bottom-4 right-4">
+                    {% csrf_token %}
+                    <button type="submit" class="fab">
+                        <i class="material-icons">add</i>
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-center text-gray-500 mt-10">ยังไม่มีเมนูในระบบ</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ปุ่มดูตะกร้าสินค้า -->
+    {% if not user.is_superuser %}
+        <a href="{% url 'cart' %}" class="cart-btn">
+            <i class="material-icons">shopping_cart</i>
+        </a>
+    {% endif %}
+
+
+    <!-- JavaScript for Kebab Menu -->
+    <script>
+        // เพิ่ม event listener สำหรับการคลิกปุ่ม kebab
+        document.getElementById('kebab-menu-btn').addEventListener('click', function() {
+            console.log('Kebab menu clicked');  // ตรวจสอบว่าเหตุการณ์เกิดขึ้น
+            var menu = document.getElementById('kebab-menu');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none'; // Toggle visibility
+        });
+
+        // ปิดเมนู kebab เมื่อคลิกที่พื้นที่อื่น
+        window.addEventListener('click', function(event) {
+            var menu = document.getElementById('kebab-menu');
+            var kebabButton = document.getElementById('kebab-menu-btn');
+            if (!kebabButton.contains(event.target) && !menu.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- CSS สำหรับ FAB (Floating Action Button) และ Cart Button -->
+    <style>
+        .cart-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #CD853F;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .cart-btn:hover {
+            background-color: #A67C52;
+        }
+
+        .cart-btn i {
+            font-size: 36px;
+        }
+    </style>
+</body>
+</html>

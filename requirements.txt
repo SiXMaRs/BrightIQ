@@ -1,0 +1,7 @@
+django 
+scikit-learn
+pandas
+pillow
+plotly
+gradio==4.44.1
+django-tailwind

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> <!-- เพิ่ม Material Icons -->
+    {% load static %}
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+
+<div class="flex items-center justify-center min-h-screen bg-[#DEB887] p-4">
+    <div class="flex w-full max-w-4xl bg-white shadow-lg rounded-2xl overflow-hidden">
+        <!-- ฝั่งซ้าย: รูปภาพ -->
+        <div class="w-1/2 flex items-center justify-center rounded-l-2xl overflow-hidden">
+            <img src="/media/assest/login.png" alt="Cafe Login" class="w-full h-full object-cover">
+        </div>
+        <!-- ฝั่งขวา: แบบฟอร์มเข้าสู่ระบบ -->
+        <div class="w-1/2 p-12 flex flex-col justify-center items-center text-black bg-[#F5F1E3] rounded-r-2xl">
+            <div class="w-full max-w-sm">
+                <div class="flex flex-col items-center mb-6">
+                    <img src="/media/TEA%20FIRST.png" alt="Cafe Login" class="rounded-full object-contain">
+                    <h2 class="text-2xl font-semibold mt-4 text-center">ยินดีต้อนรับกลับ กรุณาเข้าสู่ระบบ</h2>
+                </div>
+
+                <!-- แสดงข้อความแจ้งเตือน -->
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                            <p class="text-red-600 font-semibold bg-red-100 p-3 rounded-md">{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="space-y-6 w-full">
+                    {% csrf_token %}
+                    <div>
+                        <label for="username" class="block text-sm font-medium">ชื่อผู้ใช้</label>
+                        <div class="relative">
+                            <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">person</span>
+                            <input type="text" id="username" name="username" class="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="ชื่อผู้ใช้">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium">รหัสผ่าน</label>
+                        <div class="relative">
+                            <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">lock</span>
+                            <input type="password" id="password" name="password" class="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="********">
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <button type="submit" class="w-full bg-[#8B4513] text-white py-3 rounded-lg font-semibold hover:bg-[#6B4226] transition">
+                            เข้าสู่ระบบ
+                        </button>
+                    </div>
+                </form>
+
+                <div class="w-full text-center my-4 text-gray-600">หรือ</div>
+
+                <div class="w-full text-center mt-6 text-gray-600">
+                    ยังไม่มีบัญชี? <a href="{% url 'register' %}" class="text-[#8B4513] hover:underline">สมัครสมาชิก</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
