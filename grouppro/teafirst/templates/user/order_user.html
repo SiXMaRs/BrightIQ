@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติการสั่งซื้อของฉัน</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <div class="flex justify-between items-center p-4 bg-[#DEB887] shadow-md">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'menu' %}">
+                <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
+            </a>
+            <div class="text-2xl text-white">TEAFIRST</div>
+        </div>
+
+        <div class="flex space-x-6">
+            {% if user.is_superuser %}
+                <a href="{% url 'list_menu' %}" class="text-white hover:text-gray-200 font-medium">เพิ่มเมนู</a>
+                <a href="{% url 'order_history' %}" class="text-white hover:text-gray-200 font-medium"> รายการออเดอร์</a>
+                <a href="{% url 'dashboard' %}" class="text-white hover:text-gray-200 font-medium"> สรุปยอดขาย</a>
+            {% endif %}
+            <a href="{% url 'user_order' %}" class="text-white hover:text-gray-200 font-medium"> ประวัติการสั่งซื้อ</a>
+            <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-400 font-medium"> ออกจากระบบ</a>
+        </div>
+    </div>
+
+
+    <div class="max-w-screen-md mx-auto p-6 mt-6 bg-white shadow-lg rounded-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">🛒 ประวัติการสั่งซื้อของฉัน</h2>
+
+        {% if orders %}
+        <ul class="space-y-6">
+            {% for order in orders %}
+            <li class="relative bg-gray-50 p-4 rounded-lg shadow-md border-2 border-gray-300">
+
+                <span class="absolute top-2 right-4 text-lg font-semibold 
+                    {% if order.status == 'waiting' %} text-yellow-500 
+                    {% elif order.status == 'completed' %} text-green-500 
+                    {% endif %}">
+                    {% if order.status == 'waiting' %} รออนุมัติ 
+                    {% elif order.status == 'completed' %}สำเร็จ 
+                    {% endif %}
+                </span>
+
+                <div class="flex items-center space-x-4">
+                    {% if order.image %}
+                        <img src="{{ order.image.url }}" alt="{{ order.menu.name }}" class="w-20 h-20 rounded-lg object-cover">
+                    {% endif %}
+                    <div>
+                        <h3 class="text-lg font-semibold">{{ order.menu.name }}</h3>
+                        <p class="text-gray-700"><strong>จำนวน:</strong> {{ order.quantity }}</p>
+                        <p class="text-[#CC6600] font-bold"><strong>ราคารวม:</strong> {{ order.total_price }} บาท</p>
+                        <p class="text-gray-600 text-sm"><strong>วันที่สั่งซื้อ:</strong> {{ order.ordered_at }}</p>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-gray-500 mt-10">ยังไม่มีคำสั่งซื้อ</p>
+        {% endif %}
+    </div>
+
+    <!-- ปุ่มกลับไปที่เมนู -->
+    <div class="mt-6 text-center">
+        <a href="{% url 'menu' %}" class="text-[#8B4513] hover:underline">← กลับไปที่เมนู</a>
+    </div>
+
+</body>
+</html>

@@ -8,7 +8,7 @@
     <div class="flex w-full max-w-4xl bg-white shadow-lg rounded-2xl overflow-hidden">
         <!-- ฝั่งซ้าย: รูปภาพ -->
         <div class="w-1/2 flex items-center justify-center rounded-l-2xl overflow-hidden">
-            <img src="C:/DataScienceToolBox/BrightIQ/grouppro/media/assest/login.png" alt="Cafe Register" class="w-full h-full object-cover">
+            <img src="/media/assest/login.png" alt="Cafe Register" class="w-full h-full object-cover">
         </div>
         <!-- ฝั่งขวา: แบบฟอร์มลงทะเบียน -->
         <div class="w-1/2 p-12 flex flex-col justify-center items-center text-black bg-[#F5F1E3] rounded-r-2xl">
@@ -29,12 +29,28 @@
                             <input type="email" id="email" name="email" class="w-full px-4 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="อีเมล">
                         </div>
                         <div>
-                            <label for="password" class="block text-sm font-medium">รหัสผ่าน</label>
+                            <label for="password1" class="block text-sm font-medium">รหัสผ่าน</label>
                             <div class="relative">
-                                <input type="password" id="password" name="password" class="w-full pl-4 pr-10 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="********">
-                                <span class="material-icons absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 cursor-pointer" onclick="togglePassword()">visibility_off</span>
+                                <input type="password" id="password1" name="password1" class="w-full pl-4 pr-10 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="********">
+                                <span class="material-icons absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 cursor-pointer" onclick="togglePassword('password1')">visibility_off</span>
                             </div>
                         </div>
+                        <div>
+                            <label for="password2" class="block text-sm font-medium">ยืนยันรหัสผ่าน</label>
+                            <div class="relative">
+                                <input type="password" id="password2" name="password2" class="w-full pl-4 pr-10 py-2 border border-gray-400 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#8B4513]" placeholder="********">
+                                <span class="material-icons absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 cursor-pointer" onclick="togglePassword('password2')">visibility_off</span>
+                            </div>
+                        </div>
+                        {% if messages %}
+                            <div class="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+                                <ul class="list-disc ml-6">
+                                    {% for message in messages %}
+                                        <li>{{ message }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="flex flex-col space-y-4 mt-6">
                         <button type="submit" class="w-full bg-[#8B4513] text-white py-3 rounded-lg font-semibold hover:bg-[#6B4226] transition">
@@ -45,6 +61,7 @@
                         มีบัญชีอยู่แล้ว? <a href="{% url 'login' %}" class="text-[#8B4513] hover:underline">เข้าสู่ระบบ</a>
                     </p>
                 </form>
+                
             </div>
         </div>
     </div>

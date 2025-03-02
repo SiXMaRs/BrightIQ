@@ -13,17 +13,19 @@
 
     <div class="flex justify-between items-center p-4 bg-[#DEB887] shadow-md">
         <div class="flex items-center space-x-4">
-            <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-16 h-16 rounded-full object-contain">
-            <div class="text-2xl font-semibold text-white">
-                TEAFIRST
-            </div>
+            <a href="{% url 'menu' %}">
+                <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
+            </a>
+            <div class="text-2xl text-white">TEAFIRST</div>
         </div>
 
         <div class="flex space-x-6">
             {% if user.is_superuser %}
                 <a href="{% url 'list_menu' %}" class="text-white hover:text-gray-200 font-medium">เพิ่มเมนู</a>
                 <a href="{% url 'order_history' %}" class="text-white hover:text-gray-200 font-medium"> รายการออเดอร์</a>
+                <a href="{% url 'dashboard' %}" class="text-white hover:text-gray-200 font-medium"> สรุปยอดขาย</a>
             {% endif %}
+            <a href="{% url 'user_order' %}" class="text-white hover:text-gray-200 font-medium"> ประวัติการสั่งซื้อ</a>
             <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-400 font-medium"> ออกจากระบบ</a>
         </div>
     </div>
@@ -44,10 +46,9 @@
                 <div class="p-5">
                     <h2 class="text-lg font-semibold text-gray-800">{{ menu.name }}</h2>
                     <p class="text-sm text-gray-600 mt-1">{{ menu.description|truncatewords:10 }}</p>
-                    <p class="text-md font-bold mt-2 text-[#CC6600]">{{ menu.price }} บาท</p>
+                    <p class="text-md mt-2 text-[#CC6600]">{{ menu.price }} บาท</p>
                 </div>
-    
-                <!-- ปุ่มเพิ่มลงตะกร้า -->
+
                 <a href="{% url 'add_to_cart' menu.id %}" class="absolute bottom-5 right-5 fab">
                     <i class="material-icons">add</i>
                 </a>
@@ -57,14 +58,11 @@
             {% endfor %}
         </div>
     </div>
-    
 
-    <!-- ปุ่มดูตะกร้าสินค้า -->
     <a href="{% url 'cart' %}" class="cart-btn">
         <i class="material-icons">shopping_cart</i>
     </a>
 
-    <!-- CSS สำหรับ Floating Action Button (FAB) -->
     <style>
         .fab {
             background-color: #CD853F;

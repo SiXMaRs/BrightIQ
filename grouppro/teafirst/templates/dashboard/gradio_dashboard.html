@@ -2,37 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div class="flex justify-between items-center px-8 py-4 bg-[#DEB887] shadow-md">
+
+    <div class="flex justify-between items-center p-4 bg-[#DEB887] shadow-md">
         <div class="flex items-center space-x-4">
             <a href="{% url 'menu' %}">
                 <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
             </a>
-            <div class="text-2xl text-white">
-                TEAFIRST
-            </div>
+            <div class="text-2xl text-white">TEAFIRST</div>
         </div>
 
-        <div class="flex space-x-8">
+        <div class="flex space-x-6">
             {% if user.is_superuser %}
-                <a href="{% url 'list_menu' %}" class="text-white text-lg  hover:text-gray-200 transition">
-                    เพิ่มเมนู
-                </a>
-                <a href="{% url 'order_history' %}" class="text-white text-lg  hover:text-gray-200 transition">
-                    รายการออเดอร์
-                </a>
+                <a href="{% url 'list_menu' %}" class="text-white hover:text-gray-200 font-medium">เพิ่มเมนู</a>
+                <a href="{% url 'order_history' %}" class="text-white hover:text-gray-200 font-medium"> รายการออเดอร์</a>
+                <a href="{% url 'dashboard' %}" class="text-white hover:text-gray-200 font-medium"> สรุปยอดขาย</a>
             {% endif %}
-            <a href="{% url 'logout' %}" class="text-red-600 text-lg  hover:text-red-400 transition">
-                 ออกจากระบบ
-            </a>
+            <a href="{% url 'user_order' %}" class="text-white hover:text-gray-200 font-medium"> ประวัติการสั่งซื้อ</a>
+            <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-400 font-medium"> ออกจากระบบ</a>
         </div>
     </div>
-    <h1>Sales Dashboard</h1>
-    <iframe src="{{ gradio_url }}" width="100%" height="700" frameborder="0"></iframe>
+
+    <!-- Header -->
+    <h1 class="text-3xl font-bold text-center mt-6 mb-4">สรุปยอดขาย</h1>
+
+    <div class="max-w-screen-md mx-auto mb-6 p-6 ">
+        <div class="flex justify-between items-center space-x-6">
+            <div class="w-1/2 flex flex-col items-center p-4 bg-green-100 rounded-lg shadow-md">
+                <div class="text-gray-700 text-lg font-semibold">รายได้วันนี้</div>
+                <div class="text-green-600 text-3xl mt-2">
+                    {{ total_sales_today }} บาท
+                </div>
+            </div>
+    
+            <div class="w-1/2 flex flex-col items-center p-4 bg-blue-100 rounded-lg shadow-md">
+                <div class="text-gray-700 text-lg font-semibold">จำนวนออเดอร์วันนี้</div>
+                <div class="text-blue-600  text-3xl mt-2">
+                    {{ count_orders_today }} แก้ว
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Gradio Iframe -->
+    <div class="max-w-screen-xl mx-auto">
+        <iframe src="{{ gradio_url }}" width="100%" height="700" frameborder="0" class="w-full rounded-lg shadow-md"></iframe>
+    </div>
+
 </body>
 </html>

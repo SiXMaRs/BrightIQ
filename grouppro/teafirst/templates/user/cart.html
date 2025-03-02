@@ -16,15 +16,16 @@
             <a href="{% url 'menu' %}">
                 <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
             </a>
-            <div class="text-2xl text-white">
-                TEAFIRST
-            </div>
+            <div class="text-2xl text-white">TEAFIRST</div>
         </div>
+
         <div class="flex space-x-6">
             {% if user.is_superuser %}
                 <a href="{% url 'list_menu' %}" class="text-white hover:text-gray-200 font-medium">เพิ่มเมนู</a>
                 <a href="{% url 'order_history' %}" class="text-white hover:text-gray-200 font-medium"> รายการออเดอร์</a>
+                <a href="{% url 'dashboard' %}" class="text-white hover:text-gray-200 font-medium"> สรุปยอดขาย</a>
             {% endif %}
+            <a href="{% url 'user_order' %}" class="text-white hover:text-gray-200 font-medium"> ประวัติการสั่งซื้อ</a>
             <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-400 font-medium"> ออกจากระบบ</a>
         </div>
     </div>

@@ -22,15 +22,14 @@ class Cart(models.Model):
     menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     toppings = models.ManyToManyField(Topping, blank=True)
-    total_price = models.IntegerField(default=0)  # ✅ เพิ่มฟิลด์นี้
+    total_price = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
-        is_new = self.id is None  # ✅ เช็คว่าเป็น object ใหม่หรือไม่
+        is_new = self.id is None
         
-        super().save(*args, **kwargs)  # ✅ บันทึกก่อนครั้งแรกถ้าเป็น object ใหม่
-
+        super().save(*args, **kwargs)
+        
         if is_new:
-            # ✅ คำนวณราคาของ toppings หลังจาก instance ถูกบันทึก
             topping_price = sum(topping.price for topping in self.toppings.all())
             self.total_price = (self.menu.price + topping_price) * self.quantity
             super().save(*args, **kwargs)

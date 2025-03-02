@@ -68,43 +68,36 @@
             border-radius: 8px;
             box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
             width: 90%;
-            max-width: 350px; /* ปรับให้เล็กลงได้ตามต้องการ */
+            max-width: 350px; 
         }
     </style>
 
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-    <div class="flex justify-between items-center px-8 py-4 bg-[#DEB887] shadow-md">
+    <div class="flex justify-between items-center p-4 bg-[#DEB887] shadow-md">
         <div class="flex items-center space-x-4">
             <a href="{% url 'menu' %}">
                 <img src="/media/TEA FIRST01.png" alt="Cafe Logo" class="w-14 h-14 rounded-full object-contain cursor-pointer">
             </a>
-            <div class="text-2xl text-white">
-                TEAFIRST
-            </div>
+            <div class="text-2xl text-white">TEAFIRST</div>
         </div>
 
-        <div class="flex space-x-8">
+        <div class="flex space-x-6">
             {% if user.is_superuser %}
-                <a href="{% url 'list_menu' %}" class="text-white text-lg  hover:text-gray-200 transition">
-                    เพิ่มเมนู
-                </a>
-                <a href="{% url 'order_history' %}" class="text-white text-lg  hover:text-gray-200 transition">
-                    รายการออเดอร์
-                </a>
+                <a href="{% url 'list_menu' %}" class="text-white hover:text-gray-200 font-medium">เพิ่มเมนู</a>
+                <a href="{% url 'order_history' %}" class="text-white hover:text-gray-200 font-medium"> รายการออเดอร์</a>
+                <a href="{% url 'dashboard' %}" class="text-white hover:text-gray-200 font-medium"> สรุปยอดขาย</a>
             {% endif %}
-            <a href="{% url 'logout' %}" class="text-red-600 text-lg  hover:text-red-400 transition">
-                 ออกจากระบบ
-            </a>
+            <a href="{% url 'user_order' %}" class="text-white hover:text-gray-200 font-medium"> ประวัติการสั่งซื้อ</a>
+            <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-400 font-medium"> ออกจากระบบ</a>
         </div>
     </div>
 
     <button onclick="showForm()" class="fab">
         <i class="material-icons">add</i>
     </button>
-    
-    <!-- ✅ ปรับระยะห่างเนื้อหาหลักให้ชิด Navbar มากขึ้น -->
+
     <div class="flex justify-center items-center h-auto pt-6">
         <div class="max-w-screen-md w-full p-6 mx-auto">
             <h2 class="text-2xl font-bold text-center mb-6">จัดการเมนูเครื่องดื่ม</h2>
@@ -114,7 +107,7 @@
             {% if page_obj %}
             <ul class="space-y-4">
                 {% for menu in page_obj %}
-                <li class="bg-gray-50 p-4 rounded-lg shadow-md flex justify-between items-center">
+                <li class="bg-gray-50 p-2 rounded-lg shadow-md flex justify-between items-center">
                     <div class="flex items-center space-x-4">
                         {% if menu.image %}
                             <img src="{{ menu.image.url }}" alt="{{ menu.name }}" class="w-16 h-16 rounded-lg object-cover">
@@ -126,7 +119,7 @@
                         </div>
                     </div>
 
-                    <!-- ปุ่มแก้ไข & ลบ -->
+
                     <div class="flex items-center space-x-4">
                         <button class="icon-btn text-blue-500" 
                                 onclick="showEditForm('{{ menu.id }}', '{{ menu.name }}', '{{ menu.description }}', '{{ menu.price }}', '{% if menu.image %}{{ menu.image.url }}{% endif %}')">
@@ -146,7 +139,6 @@
                 {% endfor %}
             </ul>
 
-            <!-- ✅ Pagination -->
             <div class="flex justify-center mt-6">
                 {% if page_obj.has_previous %}
                     <a href="?page=1" class="px-3 py-2 mx-1 bg-gray-200 text-gray-700 rounded">หน้าแรก</a>
@@ -169,9 +161,8 @@
     
         
 
-    <!-- ========== Modal เพิ่มเมนู ========== -->
     <div id="menu-form" class="hidden modal">
-        <div class="modal-content" style="max-width: 500px;"> <!-- ฟอร์มเพิ่มเมนู อาจอยากให้ใหญ่กว่าฟอร์มแก้ไข -->
+        <div class="modal-content" style="max-width: 500px;"> 
             <h3 class="text-xl font-bold text-center mb-4">เพิ่มเมนู</h3>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -186,7 +177,6 @@
                 <input type="number" name="price" class="w-full border px-4 py-2 rounded-md mb-4" step="0.01" required>
 
                 <label class="block mb-2">อัปโหลดรูปภาพ:</label>
-                <!-- พื้นที่ลากวาง + ไอคอน -->
                 <div id="drop-area" class="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-100 hover:bg-gray-200 transition mb-4 flex flex-col items-center justify-center">
                     <input type="file" name="image" id="fileElem" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
 
@@ -213,57 +203,50 @@
         </div>
     </div>
 
-<!-- Modal แก้ไขเมนู -->
- 
-<!-- Modal แก้ไขเมนู -->
+<!--แก้ไขเมนู -->
 <div id="edit-menu-modal" class="hidden modal">
-    <div class="modal-content w-full max-w-xl p-4 overflow-y-auto max-h-[90vh]">
-      <!-- หัวข้ออยู่บนสุด -->
+    <div class="modal-content w-full max-w-xl p-6 overflow-y-auto max-h-[90vh]">
+ 
       <h3 class="text-2xl font-bold text-center mb-4">แก้ไขเมนู</h3>
-      
-      <!-- รูปอยู่ใต้หัวข้อ แต่ยังคงบนสุดของฟอร์ม -->
-      <img id="edit-menu-preview" 
-           alt="รูปปัจจุบัน" 
-           class="mb-4 w-full max-h-48 object-cover hidden rounded-md">
-  
+      <div class="flex justify-center">
+          <img id="edit-menu-preview" 
+               alt="รูปปัจจุบัน" 
+               class="mb-4 max-h-64 w-auto object-contain rounded-md border shadow-lg">
+      </div>
+
       <form method="post" enctype="multipart/form-data" action="{% url 'edit_menu' %}">
         {% csrf_token %}
         <input type="hidden" id="edit-menu-id" name="menu_id">
-  
-        <!-- ชื่อเมนู -->
+
         <div class="flex items-center mb-4">
           <label for="edit-menu-name" class="w-24 font-semibold mr-2">ชื่อเมนู:</label>
           <input type="text" id="edit-menu-name" name="name"
-                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                 class="border px-3 py-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                  required>
         </div>
-  
-        <!-- รายละเอียด (Textarea) -->
+
         <div class="flex items-start mb-4">
           <label for="edit-menu-description" class="w-24 font-semibold mr-2">รายละเอียด:</label>
           <textarea id="edit-menu-description" name="description" rows="3"
-                    class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    class="border px-3 py-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
-  
-        <!-- ราคา -->
+
         <div class="flex items-center mb-4">
           <label for="edit-menu-price" class="w-24 font-semibold mr-2">ราคา:</label>
           <input type="number" id="edit-menu-price" name="price" step="0.01"
-                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                 class="border px-3 py-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                  required>
         </div>
-  
-        <!-- อัปโหลดรูปภาพ -->
+
         <div class="flex items-center mb-6">
           <label class="w-24 font-semibold mr-2">อัปโหลดรูปภาพ:</label>
           <input type="file" name="image" accept="image/*"
-                 class="border px-2 py-1 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="border px-3 py-2 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
-  
-        <!-- ปุ่มต่าง ๆ -->
+
         <div class="flex justify-end space-x-4">
           <button type="button" onclick="hideEditForm()" 
-                  class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-400 hover:text-white transition">
+                  class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">
             ยกเลิก
           </button>
           <button type="submit"
@@ -277,7 +260,7 @@
   
   
 
-    <!-- ========== Modal ยืนยันการลบ ========== -->
+    <!-- ==========ยืนยันการลบ ========== -->
     <div id="delete-menu-modal" class="hidden modal">
         <div class="modal-content">
             <h3 class="text-xl font-bold mb-4 text-center">ยืนยันการลบเมนู</h3>
@@ -289,14 +272,12 @@
     </div>
 
     <script>
-        /* ========== เพิ่มเมนู ========== */
         function showForm() {
             document.getElementById("menu-form").classList.remove("hidden");
         }
         function hideForm() {
             document.getElementById("menu-form").classList.add("hidden");
         }
-        /* ฟังก์ชันจัดการไฟล์อัปโหลดในฟอร์มเพิ่มเมนู (โชว์ชื่อไฟล์) */
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -304,7 +285,6 @@
             }
         }
 
-        /* ========== แก้ไขเมนู ========== */
         function showEditForm(menuId, name, description, price, imageUrl) {
             document.getElementById("edit-menu-modal").classList.remove("hidden");
             document.getElementById("edit-menu-id").value = menuId;
@@ -325,7 +305,6 @@
             document.getElementById("edit-menu-modal").classList.add("hidden");
         }
 
-        /* ========== ลบเมนู ========== */
         function showDeleteModal(menuId, menuName) {
             document.getElementById("delete-menu-modal").classList.remove("hidden");
             document.getElementById("delete-menu-id").value = menuId;

@@ -3,6 +3,9 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import JsonResponse
+from django.db.models import Sum
+from django.utils import timezone
+from django.contrib import messages
 import json
 from django.core.paginator import Paginator
 from .forms import *
@@ -23,10 +26,16 @@ def register_view(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user) 
-            return redirect('login') 
+            login(request, user)
+            return redirect('menu')  
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+
     else:
         form = RegisterForm()
+    
     return render(request, 'user/register.html', {'form': form})
 
 def login_view(request):
@@ -143,6 +152,12 @@ def place_order(request):
 
     return redirect('menu')
 
+@login_required(login_url='/login/')
+def user_order_history_view(request):
+    orders = Order.objects.filter(user=request.user).order_by('-ordered_at') 
+    return render(request, 'user/order_user.html', {'orders': orders})
+
+
 
 
 #Admin
@@ -159,8 +174,8 @@ def add_menu_view(request):
     else:
         form = MenuForm()
 
-    menus = Menu.objects.all().order_by('-id')  # ✅ เรียงจากใหม่ไปเก่า
-    paginator = Paginator(menus, 5)  # ✅ แสดง 5 รายการต่อหน้า
+    menus = Menu.objects.all().order_by('-id')  
+    paginator = Paginator(menus, 5) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -174,7 +189,7 @@ def edit_menu_view(request):
     if request.method == 'POST':
         menu_id = request.POST.get('menu_id')
         menu = get_object_or_404(Menu, id=menu_id)
-        form = MenuForm(request.POST, request.FILES, instance=menu)  # ✅ รองรับการอัปโหลดไฟล์
+        form = MenuForm(request.POST, request.FILES, instance=menu) 
         if form.is_valid():
             form.save()
             return redirect('list_menu')
@@ -199,17 +214,20 @@ def order_history_view(request):
     if not request.user.is_staff:
         return redirect('menu')
 
-    orders = Order.objects.all()  
+    orders = Order.objects.all().order_by('-ordered_at')  
+    paginator = Paginator(orders, 5)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     if request.method == 'POST':
-        order_id = request.POST.get('order_id')  
-        order = get_object_or_404(Order, id=order_id)  
+        order_id = request.POST.get('order_id')
+        order = get_object_or_404(Order, id=order_id)
 
-        if order.status == 'waiting':  
-            order.status = 'completed'  
+        if order.status == 'waiting':
+            order.status = 'completed'
             order.save()
 
-    return render(request, 'admin/order_history.html', {'orders': orders})
+    return render(request, 'admin/order_history.html', {'page_obj': page_obj})
 
 @login_required(login_url='/login/')
 def create_order_from_store(request):
@@ -228,7 +246,7 @@ def create_order_from_store(request):
             menu=menu,
             quantity=int(quantity),
             total_price=total_price,
-            status='success',  
+            status='completed',
             image=menu.image  
         )
 
@@ -341,5 +359,20 @@ if not any(thread.name == "GradioThread" for thread in threading.enumerate()):
     thread = threading.Thread(target=gradio_dashboard, daemon=True, name="GradioThread")
     thread.start()
 
+def get_today_stats():
+    today = timezone.now().date()  
+    orders_today = Order.objects.filter(ordered_at__date=today)
+    total_sales_today = orders_today.aggregate(Sum('total_price'))['total_price__sum'] or 0
+    count_orders_today = orders_today.count()
+
+    return total_sales_today, count_orders_today
+
 def dashboard(request):
-    return render(request, "dashboard/gradio_dashboard.html", {"gradio_url": gradio_url})
+    total_sales_today, count_orders_today = get_today_stats()
+    
+    context = {
+        "gradio_url": gradio_url,
+        "total_sales_today": total_sales_today,
+        "count_orders_today": count_orders_today
+    }
+    return render(request, "dashboard/gradio_dashboard.html", context)
